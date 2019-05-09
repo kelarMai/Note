@@ -1,0 +1,65 @@
+1. Android 系统四大组件： 活动(Activate)、服务(Service)、广播接收器(Boradcast Receiver)、内容提供器(Content Provider)
+2. 日志打印 Log.v() Log.d() Log.i() Log.w() Log.e() ;可以使用 logt logv logd + tag 自动生成；
+3. 活动的生命周期： onCreate() onStart() onResume() onPause() onStop() onStop() onDestory() onRestart()；
+4. 启动模式： standard singleTop singleTask singleInstance
+5. 快速把字符串转为 string.xml 中内容方法 alt+enter
+6. .9格式文件
+	顶部：在水平拉伸的时候，保持其他位置不动，只在这条黑线的区域做无限的延伸
+	左边：在竖直拉伸的时候，保持其他位置不动，只在这条黑线的区域做无限的延伸
+	底部：在水平拉伸的时候，指定图片里的内容显示的区域
+	右边：在竖直拉伸的时候，指定图片里的内容显示的区域
+7. 	碎片的生命周期： onAttach() onCreateView() onActivityCreated() onDestoryView() onDetach()
+8. 	px： pixel，像素，电子屏幕上组成一幅图画或照片的最基本单元
+	pt: point，点，印刷行业常用单位，等于1/72英寸
+	ppi: pixel per inch，每英寸像素数，该值越高，则屏幕越细腻
+	dpi: dot per inch，每英寸多少点，该值越高，则图片越细腻
+	dp: dip，Density-independent pixel, 是安卓开发用的长度单位，1dp表示在屏幕像素点密度为160ppi时1px长度
+	sp: scale-independent pixel，安卓开发用的字体大小单位
+9. 数据持久化方法：
+	文件存储
+	SharedPreferences
+	SQLite
+		数据类型：NULL INTEGER REAL TEXT BLOB
+		查看数据库的方法 
+			1. https://www.cnblogs.com/hacjy/p/7419004.html
+			2. 使用 C:\Program Files (x86)\Android\android-sdk\platform-tools 下的 adb.exe 工具；
+				adb devices
+				adb -s emulator-xxxx shell
+				run-as com.yourapp.name  (这一步是用来使你获得进入该应用 data/data 的权限)
+				ls
+				sqlite3 name.db 
+				~
+10. 使用 message Handle 接口进行线程异步调用； runOnUiThread() 也是使用同样的方法。
+11. 界面颜色设置：
+12. 一般，要用到px的情况是需要画1像素表格线或阴影线的时候，如果用其他单位画则会显得模糊。
+13. 日志类型 ：5种
+	1.debug 日志：用于开发人员本地 debug
+	2.aop debug 日志：用于开发人员本地 debug, 使用了 aop 可以通过简单的注释，对方法和类进行切片打日志。用于打一些需要统一执行的日志。
+	3.网络请求 日志：用于开发人员在本地对网络请求 debug
+	4.本地文件 日志：用于记录在 app 上线之后出现的bug，将日志打到文件中，可以通过一个入口让用户手动点击上传日志。
+	5.埋点 日志：用于记录用户使用 app 的数据、app 性能等等的埋点日志，数据结构由前后端协商定义，最后会存入后端的数据库以便进行一些数据分析。埋点的方式可以是手动的，可以是自动的。
+14. 使用 okhttp + retrofit 定制底层
+
+
+遇到问题记录：
+	1. layout 不显示 menu ；原因是 onCreateOptionsMenu() 函数没有被调用；需要修改 AndroidManifest.xml 文件，更换主体 android:theme="@android:style/Theme.Holo.Light.DarkActionBar"
+	2. 在 Android Studio 中创建 Activity 时，如果勾选了 Backwards Compatibility(AppCompat) 选项，所创建的 Activity 会继承 AppCompatActivity 而不是 Activity，此时需要使用对应的 AppCompat 主题。  不同类型的 Activity 需要对应不同的主题？
+
+
+问题:
+	1. 在 android studio 中是怎么分别连接 java sdk 和 android sdk 的；android 的 platform 又是怎么回事来的？
+	2. 
+
+
+接口：
+	权限：
+		ContextCompat.checkSelfPermission()
+		PackageManager.PERMISSSION_GRANTED
+		ActivityCompat.requestPermissions()
+		onRequestPermissionsResult()
+	内容提供器：
+		ContentResolver
+		getContentResolver()
+
+
+

@@ -1,0 +1,66 @@
+1.	$ git config --global user.name "Your Name"
+	$ git config --global user.email "email@example.com"
+	两行都要输入，简单认证。
+2.	$ git init  当前目录建立空仓库。 
+3.	$ git add readme.txt   添加文件到当前仓库中。
+4.	$ git commit -m "wrote a readme file"   提交文件当前仓库中，""中内容为提交说明，可任意；
+5.	$ git status   查看当前仓库状态。
+6.	$ git diff readme.txt   查看具体文件修改内容。
+7.	add 之后可以使用status 查看修改的内容。
+8.	$ git log 查看历史修改。     $ git log --pretty=oneline   可以只查看版本号"commit id"  和 修改说明。
+9.	HEAD表示当前版本。  HEAD^ 是上一个版本，同理HEAD^^ 上上个版本，也可以用类似HEAD~100表示前一百个版本。
+10.	$ git reset --hard HEAD^   回退上一个版本。
+11.	$ cat readme.txt	查看内容。
+12.	回退回新版本，需要	$ git reset --hard 3628164  使用版本号。
+13.	$ git reflog 查看命令记录，可以找到新版本的版本号
+14.	$ git checkout -- readme.txt  把readme.txt文件在工作区的修改全部撤销
+15.	$ git reset HEAD readme.txt  可以把暂存区的修改撤销掉（unstage），重新放回工作区
+16.	$ git rm test.txt 	删除文件  并需要  $ git commit -m "remove test.txt" 确认。
+17.	由于你的本地Git仓库和GitHub仓库之间的传输是通过SSH加密的，所以需要创建SSH Key.	$ ssh-keygen -t rsa -C "youremail@example.com"
+18.	$ git remote add origin git@github.com:michaelliao/learngit.git    
+@后面的是git 服务器地址；：后面的是账户名称，/后面的是项目名称。origin 是远程库的名字。
+19.	$ git remote add origin https://git.oshina.net/kelar760/test.git 在本地添加和服务器地址关联的对象。
+20.	若出现错误 fatal: remote origin already exists.  删除origin远程对象。$ git remote rm origin
+21.	$ git push -u origin master  内容推送。 -u参数使本地的master分支和远程的master分支关联起来
+	推送分支时，origin 为远程库分支；可以通过 git remote add 添加任意远程库作为对象；
+	master为本地分支；可以随意选择需要的分支进行推送。
+	推送时，根据本地分支的名称推送到远程库相应名称的分支上；若没有该分支则新建。 
+22.	SSH警告用于验证服务器的指纹是否正确。正确的话会添加该服务器的key到本机的信任列表中。
+23.	$ git clone git@github.com:michaelliao/gitskills  	
+	$ git clone git@gitee.com:kelar760/Test.git
+	若服务器上已有仓库，可使用clone把仓库克隆（抓取）到本地。
+24. $ git checkout -b dev	 创建分支  -b 参数是创建后马上切换；相当于
+	$ git branch dev
+	$ git checkout dev
+25.	$ git branch    查看分支
+26.	$ git merge dev   合并分支    Fast-forward为快速合并模式
+27. $ git branch -d dev   删除分支
+28.	若多个分支文件有冲突，在合并时，会在该分支上修改文件为所有冲突并存的情况；然后可以在分支上修改文件为正常状态，再进行提交 add 和 commit；
+29.	$ git log --graph --pretty=oneline --abbrev-commit     查看分支合并情况。
+30.	$ git merge --no-ff -m "merge with no-ff" dev      如果要强制禁用Fast forward模式，Git就会在merge时生成一个新的commit，这样，从分支历史上就可以看出分支信息。
+31.	$ git stash   把当前工作现场“储藏”起来，等以后恢复现场后继续工作	
+	$ git stash list    查看储存的历史		
+	$ git stash apply   应用某一次的 stash，不删除 stash 历史
+	$ git stash drop 	删除stach.
+	$ git stash pop     恢复为最新存储版本的 stash 并删除
+	$ git stash save "common"  把当前工作现场“储藏”起来，并添加说明
+32.	$ git branch -D feature-vulcan		强行删除未合并的分支
+33.	$ git remote  查看远程库信息  可以 -v
+34.	若同一分支被多人修改，第一个人可以推送分支文件到远程库，后面的人不能直接推送，需要下载被修改后的文件，重构后再push.
+	$ git pull		如果出错，先使用：$ git branch --set-upstream-to=origin/dev dev
+	使用pull 系统会把冲突文件下载并更新冲突信息到本地文件中；就像之前的本地merge一样。在修改完成后，还是add commit然后再push.
+35.	$ git tag v1.0    为该分支添加标签     
+	$ git tag      显示标签
+	$ git show v0.9   显示标签信息
+	$ git tag -d v0.1    删除标签
+	$ git push origin v1.0   推送标签到远程
+	$ git push origin --tags   一次推送所有标签到远程
+	删除远程标签：$ git tag -d v0.9    $ git push origin :refs/tags/v0.9
+	
+
+36. 使用 git 可以设置子模块；把其他 git 项目拉取过来作为子模块。使用命令
+	$ git clone  --recursive  url                      		初始化
+	$ git submodule init									或者在 clone 后再初始化
+	$ git submodule update
+
+37. $git show --stat commit_id 			查看某次 commit 的文件情况

@@ -1,0 +1,9 @@
+1.1使用c扩展python的思路是：在c文件中include "Python.h"，然后使用 PyObject* Module_func()  的函数包装c的函数，使可以接收python类型的输入然后输出python类型的对象。
+ 1.2 使用ModuleMethods[]数组包含函数信息（使python解释器知道导入什么函数）
+ 1.3 增加模块初始化函数void initMethod()
+ 1.4 建立setup.py文件把c文件写入作为扩展，然后使用python 执行setup.py文件生成动态链接库，即可调用。
+2.1 使用C调用Python的方法是：首先包含include <Python.h>，然后使用PyRun_SimpleString()函数导出当前环境变量。
+	2.2 使用Py_Initialize()函数初始化python。
+	2.3 使用python提供的接口，PyImport_ImportModule引入模块；PyObject_GetAttrString() 获取模块中函数； Py_BuildValue() 数据转换为python类型的对象；PyEval_CallObject() 调用python函数并传递参数。
+
+3.1在python中嵌入lua解释器：使用python的扩展lupa

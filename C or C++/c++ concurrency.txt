@@ -1,0 +1,103 @@
+#include <thread>
+0.linux编译包含C++11特性文件时，需要使用 -std=c++11  标志编译
+
+1.how to launch threads 
+2.check finish 
+3.keep tabs on threads 
+4.runing threads in the background
+5.passing the parameters to the threads 
+6.transfer ownership 
+
+
+1.wait for it to finish by joining ;leave it to run on its own by detcahing  新建线程时，需要记得如果主线程在子线程运行时结束，会结束所有线程。所以需要 thread::join() 或者 thread::detach()
+2.如果新线程使用了原线程参数，容易造成原线程结束后，销毁了参数而使新线程调用空的地址；比较好的方法是使新线程封闭或者只从原线程copy parameters
+3.passing the parameters :
+	void f(int i,std::string const& s);
+	std::thread t(f,3,”hello”);
+4.如果需要传递引用，需要使用std::red函数：
+	std::thread t(update_data_for_widget,w,std::ref(data));
+5.使用unique_ptr<> p 方法可以生成命名唯一的变量。然后可以使用std::move(p)对变量进行转移。
+6.the threads are moveable.just like:
+	void some_function();
+	void some_other_function();
+	std::thread t1(some_function);
+	std::thread t2=std::move(t1);
+	t1=std::thread(some_other_function);
+	std::thread t3;
+	t3=std::move(t2);
+	t1=std::move(t3);
+所以，线程也可以作为参数进行传递给其他函数。还可以使用数组对线程进行存储和操作。
+7.可以使用get_id() 取得thread 的std::thread::id 可以使用这个id进行比较、排序等各种操作。
+
+
+chapter three
+1.Problems with sharing data with different threads
+2.Protect data with mutexes
+3.Alternative facilities for protecting shared data
+
+4.全局变量条件锁和mutex的区别是 mutex只能是谁锁谁开
+5.使用std::mutex 可以使用lock() 和unlock() 还有std::lock_guard
+	std::list<int> some_list;
+	std::mutex some_mutex;
+
+	std::mutex some_mutex;
+	std::lock_guard<std::mutex> guard(some_mutex);
+
+5.5 how to avoid the problematic race condition: 把数据放在被保护的结构中，只有修改该结构的thread能进入，或者对其操作的进程都已经结束。  
+6.较好的使用方法是把数据封装到一个类中，再对类进行数据保护。把调用到改数据的函数都放到该类中。如果某一个函数拥有被保护数据的指针，则可以在数据被其他函数锁定时仍可以访问，这是不允许的。（相当于留了后门了。）如果该函数把指向保护数据的指针或者引用传递给了其他不可控（没有mutex）的函数，也容易导致数据会被破坏。
+Don’t pass pointers and references to protected data outside the scope of the lock, whether by returning them from a function, storing them in externally visible memory, or passing them as arguments to user-supplied functions.
+7.如果是一个list类型的数据结构，其任何操作，包括pop,push ,size,empty等都需要mutex防止不同的操作在不同thread中conflict,这是一个race condition
+8.使用
+	std::lock(lhs.m,rhs.m)
+	std::lock_guard<std::mutex> lock_a(lhs.m,std::adopt_lock);
+	std::lock_guard<std::mutex> lock_b(rhs.m,std::adopt_lock);
+方法可以同时锁定两个mutex
+也可以使用
+	std::unique_lock<std::mutex> lock_a(lhs.m,std::defer_lock);
+	std::unique_lock<std::mutex> loca_b(rhs.m,std::defer_lock);
+	std::lock(lock_a,lock_b);
+新创建的 unique_lock 对象管理 Mutex 对象 m，但是在初始化的时候并不锁住 Mutex 对象。 m 应该是一个没有当前线程锁住的 Mutex 对象(deferred locking);
+9.建立lock hierarchiy，使mutex有等级，如果A thread 调用了等级低的mutex，则不能再调用等级高的mutex。可以自己建立user-defined mutex type设定mutex的等级。
+10.使用unique_lock时，可以随时使用unlock() 和 lock()函数对数据保护控制。
+11. std::once_flag 和 std::call_once 组合使用在共享数据的初始化，使保护和唯一一次的初始化。
+12.reader-writer 模型；可以使用boost::shared_mutex结构；
+	std::lock_guard<boost::shared_mutex>
+	std::unique_lock<boost::shared_mutex>  和之前的用法一样，用作locking;
+	boost::shared_lock<boost::shared_mutex>  用作只读模式
+13.在同一个线程中多次lock同一个mutex:
+	std::recursive_mutex
+	std::lock_guard<std::recursive_mutex> 
+	std::unique_lock<std::recursive_mutex>
+14.线程waiting for events or limit time or one-off（使用一次的） events; 还有就是多线程共用内存代码的问题。
+	方案：	1.等待线程repeate require；
+			2.等待线程等待一段时间；
+			3.等待线程被唤醒；
+	2.std::this_thread::sleep_for()
+	3.condition variable std::condition_variable or std::condition_variable_any  该类型声明的变量可以通过调用函数进行线程通知，比如：.notify_one() ，notify_all() 变量和mutex一样，和数据是分离的。
+14.2 std::future<> std::shared_future<>；
+	可以使用std::async (类似于std::thread，但返回值和返回方法都不同)生成并行任务，返回值是一个std::future类型，可以在其他函数/线程中调用fucture.get(),取到该返回值；然后会自动关闭之前的任务。
+	std::async的参数输入有很多的骚操作，有需要可以仔细研究一下。如果在调用时，传入的第一个参数是：std::launch::deferred  创建的线程会延迟知道get() or wait() 调用时才运行。 std::launch::async 必须是新线程运行。
+14.3 std::packaged_task<> 是一个class模板，可以定义传入和返回的数据类型；定义get_future()函数返回std::future<>类型的值 
+14.4 std::promise/std::future   use the set_value() and get_future(); 用在单线程处理多连接问题是很好的
+例:
+	date_packet data=connection ->incoming();
+	std::promise<payload_type>& p = connection->get_promise(data.id);
+	p.set_value(data.payload);
+
+如果std::promise 接收的是被抛出的expection ，可以使用 set_exception()而不是set_value()函数
+14.5多线程等待一个变量时，使用std::shared_future
+14.6 waiting a limit time for a std::promise
+15. std::chrono::duration<short,std::ratio<60,1>> 定义某一长度的时间；
+	时间转换，只能从大转到小
+	std::chrono::milliseconds ms(54802);
+	std::chrono::seconds s=std::chrono::duration_cast<std::chrono::seconds>(ms);
+ 
+duration 和 fucture的结合使用：
+std::future<int> f=std::async(some_task);
+if(f.wait_for(std::chrono::milliseconds(35))==std::future_status::ready)
+	do_something_with(f.get());
+
+16. 如果多线程调用同一个函数，而函数不包含全局变量，是可重入，函数中的局部变量都是栈数据
+	如果多协程调用同一个函数，而函数不包含全局变量，是可重入，函数中的局部变量都是栈数据
+
+17. 

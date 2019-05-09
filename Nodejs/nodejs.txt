@@ -1,0 +1,15 @@
+1. log4js 日志等级
+	{
+	  ALL: new Level(Number.MIN_VALUE, "ALL"),
+	  TRACE: new Level(5000, "TRACE"),
+	  DEBUG: new Level(10000, "DEBUG"),
+	  INFO: new Level(20000, "INFO"),
+	  WARN: new Level(30000, "WARN"),
+	  ERROR: new Level(40000, "ERROR"),
+	  FATAL: new Level(50000, "FATAL"),
+	  MARK: new Level(9007199254740992, "MARK"), // 2^53
+	  OFF: new Level(Number.MAX_VALUE, "OFF")
+	}
+2. require('')  的相对路径为相对当前模块所在的路径
+   其他的文件打开路径为相对于运行环境的初始路径
+3. 使用 package.json 中的 scripts 运行程序，运行方法为 npm run script_name
