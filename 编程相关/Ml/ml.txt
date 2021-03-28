@@ -1,0 +1,46 @@
+1.maching learning can use in database mining  natural language processing (NLP),computer vision
+2.supervised learning and unsupervised learning   
+	and there reinforcement learning and recommender sysetems
+3.superviced learning ：haved tolk which is true or false  
+the first example for terminology is call a regression problem which a "right answers" is given ;and it want to predict continuous valued output
+	classification problem discrete valued output 数据是有特定分类（类型）的。
+4.unsupervised learning  just get the dataset but same lable do not be tolk what to do of this  ;find some structure of it   ；without lables and classify them.例子：在多语音的环境中根据语音振幅、频率来自动区分单一语音。
+5.svd function 	
+
+6.linear regression with one variable . also call univariate linear regression
+	supervised learning ,just give the "right answer" for each example in the data
+	have a training set;
+	use the cost function ;就是拟合函数和实际set 的偏差；可以使用梯度下降方法(Gradient descent)进行求解
+	have a Hypothesis ,Parameters ,cost function and find the Gold
+7.when there are multiple Parameters and variables we can use the matrix and vector. because many features in different order of magnitude .And we can first make a feature scaling.就是在同等量级的情况下度量不同的参数集合，以避免造成量级相差过大导致部分重要参数被弱化过滤。 So we can get every feature into approximately -1 to 1 range. There is anothe way :mean normalizaion ,to make the data in standardized interval [0,1] .(标准化的方法也有很多，min-max标准化，zero-mean，log函数转换等)(注意无量纲的转换对数据造成的影响；是否会影响了数据集的分布特性，是否过于减少了数据间的对比度，而操作上是否简单或困难。)
+8.For sufficiently small a,J(b) should decresease on every interation .
+	But if a is too small ,gradient descent can be slow to converge .(如何选择，可以先对单变量做图，观察变化趋势进行分析？)
+9.features 的选择；根据相关性，优先选择最相关的features，判断是否可以进行合并优化；多次方程的变量是否可以转化为多元一次方程；
+10.计算偏微分方程的奇点，可以找到每个变量对应的min 值(该值可能为global minimun 也可能为 local minimun)
+11.normal equation ：just use the linear algebra to calculate the Parameters.  But this method's use is cubic ,so it's better be used when features under 1000(推导方式使用图片记录在文件中，有空再重新演算一遍)  if use this method , (inv x ) * x  might be non-invertible if there are redundant features or too many features (e.g. m<= n).
+12.use hist in octave can make a graph.  size() length() 可以使用linux命令
+ "cd load && load file"   use "who" to find the variables in current  and  "whos" to find more detial about the details .    use "save" to save a variable .
+  在octave中有点乘.* 运算，但和向量的点乘没有任何关系，只是简单的使对应位置的量相乘。两个matri必须行列相等。
+  还有./ 运算，log() abs() 等运算。  " ' "为转置运算。 max min 运算可以得到value and index.   find(); sum() prod() 
+  for 运算时，在条件上添加一个",",其他以";"间隔 在结尾添加end;  (while一样的用法)
+  e.g. 	for i = 1:10,
+  			a(i) = i;
+  		end;
+  循环也可以用break 退出循环。 语法和lua类似。
+  可以在文件中编写函数，函数名需要和文件名相同（不能在同一个文件中编写多个函数咯？），然后切换到文件所在目录，系统根据文件名找到所需使用的函数。
+13.vectorization calculation
+14.In cassification y = 0 or 1 ;use sigmoid function(logistic function)just tell how mauch probability when input a x and the y should be 1 ,just like :
+	h(x) =p(y=1 | x:input) 
+Decision Boundary: use this to seperated the set of datas and find the probability when the result will be predicted to be 1 or 0
+15.over fitting : if it's undefit can be say: high bias;If it's overfit can be say high variance
+
+
+完结
+
+工具：octave matlab
+
+
+
+1. 激活函数: sigmod 函数 和较新的 ReLU ：rectified linear unit .
+2. sigmod函数在深层模型中会导致梯度消失的问题，就是当梯度小于1的时候，预测值和真实值之间的误差会在每一层的传播中衰减。而ReLU函数的则会维持梯度水平，使收敛速度维持在稳定水平。
+3. RGB 图片由三层结构组成，分别为红蓝绿三种颜色的比重，一种颜色比重为[0,255]，所有颜色都可以由这三种颜色组合而成。

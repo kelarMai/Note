@@ -35,16 +35,6 @@
 
 ---
 
-## 常见错误
-
-- 无法启动
-    + 重现方法： 使用 `sudo service clickhouse-server start` 命令或者 `service clickhouse-server start` 命令启动时，都无法启动，产生 `Effective user of the process (root) does not match the owner of the data (clickhouse)` 这样的错误。  
-    + 可能原因：因为安装 clickhouse 时，创建了一个 clickhouse 的用户和用户组（可以使用`ls -l /var/log/clickhouse-server/`命令查看相关文件的用户属性），日志文件的所属用户是 clickhouse 用户和用户组的，而 `/usr/bin/clickhouse` 则是 root 用户和用户组的；这里应该是和 clickhouse 的用户管理，linux 的用户管理相关。  
-    + 相关分析： <font color="#dd0000">这里需要先重新了解 linux 的用户管理机制，sudo 的安装机制，还有 clickhouse 的用户机制，然后再能完全的解决。</font>  
-    + 暂行办法： 直接使用 `clickhouse-server start` 命令来启动，可是日志会直接输出到控制台。
-
-
-
 ## 参考文章
 
 [参考-入门简介](https://zhuanlan.zhihu.com/p/98135840)  
@@ -53,24 +43,12 @@
 
 [返回目录](#目录)
 
-
-
 # 深入理解
 
 ## 数据存储算法
 
 ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blog.csdn.net/dbanote/article/details/8897599)，[B+树到LSM树的说明-2](https://www.jianshu.com/p/f911cb9e42de)，[LSM树原理说明-1](https://www.zhihu.com/question/19887265)，[LSM树的提出论文](https://www.cs.umb.edu/~poneil/lsmtree.pdf),
 
-
-## 相关命令
-- `PARTITION BY`  
-> 解析：
-
-- `SAMPLE BY`  
-> 解析： 
-
-- `ENGINE =`  
-> 解析：该数据库可以使用多种引擎，不同的引擎有不过的特殊功能，默认的引擎为 `MergeTree`
 
 ## 索引
 

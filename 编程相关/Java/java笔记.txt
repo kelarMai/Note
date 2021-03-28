@@ -1,0 +1,60 @@
+1.程序入口：public static void main(String[] args){}
+2.一般需要先编译为class字节码文件(生成.class文件)，再运行
+3.变量类型：局部、类的静态变量和成员变量（非静态）
+4.创建对象需要使用new 关键字
+	例子：
+	classname variable = new classname();
+5.一个源文件中只能有一个public类，源文件的名称应该和public类的类名保持一致，如果一个类定义在某个包中，那么package语句应该在源文件的首行
+6.	可访问修饰符 : default, public , protected, private
+	不可访问修饰符 : final, abstract：用来创建抽象类和抽象方法, strictfp
+	final 修饰常量，表示一个值在初始化之后就不能再改变了表示方法不能被重写，或者一个类不能有子类
+	Synchroized 和 volatile transient 修饰符用于线程；Synchronized关键字声明的方法同一时间只能被一个线程访问
+	Java的serialization提供了一种持久化对象实例的机制 ，而不想被持久化的对象数据可以使用transient修饰。
+7.可以进行自动和强制的类型转换
+8.局部变量是在栈上分配的 
+9.实例变量的值应该至少被一个方法、构造方法或者语句块引用，使得外部能够通过这些方式获取实例变量信息，访问修饰符可以修饰实例变量
+10.接口不能用于实例化对象，接口没有构造方法，接口中所有的方法必须是抽象方法，接口不能包含成员变量，除了 static 和 final 变量，接口不是被类继承了，而是要被类实现，接口支持多继承。
+11. 和C++一样，定义类时，可以定义构造函数。
+12. 内置数据类型 byte,short,int,long,float,double,boolean,char;
+	引用数据类型:类(对象)实例
+	字符常量''，字符串常量"",
+13. 语句块范围是{}的范围。
+14. 实例变量具有默认值；实例变量可以声明在使用前或者使用后；访问修饰符可以修饰实例变量，通过使用访问修饰符可以使实例变量对子类可见；在静态方法以及其他类中，访问实例变量需要使用完全限定名：ObejectReference.VariableName；类变量被声明为public static final类型时，类变量名称必须使用大写字母
+15. 访问控制修饰符： 
+	默认的，也称为default，在同一包内可见，不使用任何修饰符。
+	私有的，以private修饰符指定，在同一类内可见。
+	共有的，以public修饰符指定，对所有类可见。
+	受保护的，以protected修饰符指定，对同一包内的类和所有子类可见。
+16. 任何继承抽象类的子类必须实现父类的所有抽象方法，除非该子类也是抽象类
+	如果一个类包含若干个抽象方法，那么该类必须声明为抽象类
+17. 使用关键字 interface 定义接口，implements定义实现接口的方法。
+18. instanceOf	( Object reference variable ) instanceOf  (class/interface type)
+	检查该对象是否是一个特定类型（类类型或接口类型）
+	例子：String name = 'James';
+		boolean result = name instanceOf String; 
+19. for(声明语句 : 表达式)  用于数组；
+20. 包装类（Integer、Long、Byte、Double、Float、Short）都是抽象类Number的子类 ，可以使用包装类而不是内置数据类型定义对象；
+包装类 Character，String(该类对象无法改变，改变如果改变会产生新的对象)，StringBuffer（线程安全），StringBuilder（不是线程安全）其实三个string 差不多；
+不同的类都包含常用的方法。
+21. annotation:
+	源注解 
+		@Target: 用于描述注解的使用范围 ElementType.XXX
+			CONSTRUCTOR FIELD LOCAL_VARIABLE METHOD PACKAGE PARAMETER TYPE
+		@Reteention: 表示需要在什么级别保存该注释信息，用于描述注解的生命周期 RetentionPoicy.XXX
+			SOURCE CLASS RUNTIME
+		@Documented用于描述其它类型的annotation应该被作为被标注的程序成员的公共API
+		@Inherited阐述了某个被标注的类型是被继承的
+	@interface自定义注解,在定义注解时，不能继承其他的注解或接口。@interface用来声明一个注解，其中的每一个方法实际上是声明了一个配置参数。方法的名称就是参数的名称，返回值类型就是参数的类型（返回值类型只能是基本类型、Class、String、enum）。可以通过default来声明参数的默认值
+	通过 AnnotatedElement 对象获取 Annotation 信息；方法：
+		1. <T extends Annotation> T getAnnotation(Class<T> annotationClass): 返回该程序元素上存在的、指定类型的注解，如果该类型注解不存在，则返回null。
+		2. Annotation[] getAnnotations():返回该程序元素上存在的所有注解。
+		3. AnnotationPresent(Class<?extends Annotation> annotationClass):判断该程序元素上是否包含指定类型的注解，存在则返回true，否则返回false.
+		4. Annotation[] getDeclaredAnnotations()：返回直接存在于此元素上的所有注释。与此接口中的其他方法不同，该方法将忽略继承的注释。（如果没有注释直接存在于此元素上，则返回长度为零的一个数组。）该方法的调用者可以随意修改返回的数组；这不会对其他调用者返回的数组产生任何影响。
+
+
+
+
+
+
+
+110. 在使用eclipse 时，如果出现“无法加载主类的处理方法”类似的错误时，可以  清理项目里面的class文件进行重新编译， 鼠标点击项目名称上，然后点击工具栏上“project” --"Clean"

@@ -1,0 +1,117 @@
+1. 在 entitydef.cpp 中对文件 entities.xml 进行解析；
+2. 
+
+unicode 是怎么区分中文和英文的。
+在 python 里面字符的存储方法
+
+
+
+问题：
+	2. bassapp 中在那里调用 entitydef 的初始化函数。
+	3. python 中怎么继承 KBEngine.Entity 的？ Entity 类是在 entity.h 文件中定义的。主要是对扩展还不熟悉。 
+	4. python 中继承于 KBEngine.entity 的类的 .client 调用的是 entity.h 中的 pyGetClientEntityCall() 函数，该函数中有个 clientEntityCall() 函数用来生成 EntityCall 类型指针。那么可能是在 bassapp 之类的中，在解析 def 文件的时候，生成了 EntityCall 类型对象；
+	5. bundle 是发送消息的数据包管理 
+		bundle 中有一个 MessageHandler 类型的数据 pCurrMsgHandler_ ，该数据管理当前数据包的消息类型；在 bundle 中还有一个 Packet* pCurrPacket_ ，该数据是当前写入到 socket 中的一个包。可能的情况是， pCurrMsgHandler_ 在高层被调用，然后在 bundle 中把 pCurrMsgHandler_ 的内容写入到 pCurrPacket_ 中； Packet 类型是继承于 MemoryStream ；在 MemoryStream 中，数据从不同类型转换为 unit8 然后被直接写入到 data_ 结构中；
+		在 newMessage() 函数中可以看到，新建 packet 后， packet 的第一个参数是 msgID，第二个参数是消息长度；
+	6. MessageHandler 是消息句柄，MessgeHandlers 管理当前所有的消息类型；
+		MessageHandler 里有一个 MessageArgs 类型的数据 pArgs ，该数据应该是用来表示实际类型为 interface_defs 中生成的消息的类型； interface_defs 中生成的数据类型最后也是通过 MemoryStream 方法写入数据。
+	7. channel 是管理连接的。	
+	8. interface_defs.h 根据 def 文件建立不同数量参数的消息的处理结构；
+		例子：
+			LOGGER_MESSAGE_HANDLER_STREAM 定义接口处理函数；在定义处理函数时，定义一个继承于 Network::MessageHandler 的类 A ，
+			NETWORK_MESSAGE_DECLARE_STREAM 宏展开后就定义了 A 类的对象；
+	9. 定义接口顺序： baseapp_interface.h -> client_interface.h -> machine_interface.h -> baseappmgr_interface.h -> cellappmgr_interface.h -> cellapp_interface.h -> dbmgr_interface.h -> loginapp_interface.h -> bots_interface.h -> logger_interface.h -> interfaces_interface.h
+		为什么 msgid 从 8 起步的。
+	10. 发送到客户端的消息是使用的 onRemoteMethodCall 接口封装；
+		消息结构： Uint16(onRemoteMethodCall messageid) + Int32(eid the entity id) + Uint8/Uint16(usePropertyDescrAlias) + Unit8/Uint16(useMethodDescrAlias) + 消息体
+		kbengine 的消息体结构：
+			如果是固定长度结构，直接把所有参数以 unit8 的格式存储；如果是有不定长度结构，在不定长度的参数前添加一个 Uint32 结构表示长度，再接后面数据；
+
+
+
+	现在的问题是
+		1. MessageHandler 和 Packet 的关系是怎样的。
+		2. 消息调用时的参数数量是否可以和需要的数量不同。 不同数量时，在 c++ 的类里怎么进行参数传递
+		3. 如果参数为列表该怎么表示。
+		4. kbengine 的数据结构应该是 msgid + msglen + data; msgid 是固定长度的一个数据； msglen 的变长方法是怎样的？ data 里的数据是 unit8 类型，怎么处理多参数的情况？
+		5. 如果使用 protobuf ，怎么使定义的 messageid 和根据 def 生成的 msgid 对应起来，每个消息参数的 id 怎么定义；
+		6. 是否可能在 python 层进行 protobuf 消息的解析；如果在 python 层进行 protobuf 的解析，底层需要修改的就是 msgid 和 message 的 id 对应；msglen 使用变长方法存储数据；
+
+
+kbengine 发现数据后：
+	baseapp.exe!kbeMain(int argc, char * * argv) 行 62	C++
+	
+	baseapp.exe!KBEngine::kbeMainT<KBEngine::Baseapp>(int argc, char * * argv,KBEngine::COMPONENT_TYPE componentType, int extlisteningTcpPort_min, int extlisteningTcpPort_max, int extlisteningUdpPort_min, int extlisteningUdpPort_max, const char * extlisteningInterface, int intlisteningPort, const char * intlisteningInterface) 行 178	C++
+
+ 	baseapp.exe!KBEngine::Baseapp::run() 行 534	C++
+
+ 	baseapp.exe!KBEngine::ServerApp::run() 行 260	C++
+
+ 	baseapp.exe!KBEngine::Network::EventDispatcher::processUntilBreak() 行 185	C++
+ 	
+ 	baseapp.exe!KBEngine::Network::EventDispatcher::processOnce(bool shouldIdle) 行 203	C++
+
+ 	baseapp.exe!KBEngine::Network::EventDispatcher::processNetwork(bool shouldIdle) 行 173	C++
+
+ 	baseapp.exe!KBEngine::Network::SelectPoller::processPendingEvents(double maxWait) 行 115	C++
+
+ 	baseapp.exe!KBEngine::Network::SelectPoller::handleNotifications(int & countReady, fd_set & readFDs, fd_set & writeFDs) 行 38	C++
+
+ 	baseapp.exe!KBEngine::Network::EventPoller::triggerRead(int fd) 行 84	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReceiver::handleInputNotification(int fd) 行 44	C++
+
+ 	baseapp.exe!KBEngine::Network::TCPPacketReceiver::processRecv(bool expectingPacket) 行 105	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReceiver::processPacket(KBEngine::Network::Channel * pChannel, KBEngine::Network::Packet * pPacket) 行 67	C++
+ 	
+ 	baseapp.exe!KBEngine::Network::TCPPacketReceiver::processFilteredPacket(KBEngine::Network::Channel * pChannel, KBEngine::Network::Packet * pPacket) 行 131	C++
+
+ 	baseapp.exe!KBEngine::Network::Channel::addReceiveWindow(KBEngine::Network::Packet * pPacket) 行 1024	C++
+
+ 	baseapp.exe!KBEngine::Network::Channel::processPackets(KBEngine::Network::MessageHandlers * pMsgHandlers, KBEngine::Network::Packet * pPacket) 行 1179	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReader::processMessages(KBEngine::Network::MessageHandlers * pMsgHandlers, KBEngine::Network::Packet * pPacket) 行 189	C++
+
+ 	baseapp.exe!KBEngine::BaseappInterface::onExecScriptCommandBaseappMessagehandler_stream::handle(KBEngine::Network::Channel * pChannel, KBEngine::MemoryStream & s) 行 52	C++
+
+ 	baseapp.exe!KBEngine::EntityApp<KBEngine::Entity>::onExecScriptCommand(KBEngine::Network::Channel * pChannel, KBEngine::MemoryStream & s) 行 1334	C++
+
+ 	baseapp.exe!KBEngine::DebugHelper::debug_msg(const std::basic_string<char,std::char_traits<char>,std::allocator<char> > & s) 行 993	C++
+
+ 	baseapp.exe!KBEngine::DebugHelper::onMessage(unsigned int logType, const char * str, unsigned int length) 行 660	C++
+
+ 	baseapp.exe!KBEngine::Network::Bundle::newMessage(const KBEngine::Network::MessageHandler & msgHandler) 行 270	C++
+
+
+
+
+
+
+ 	baseapp.exe!KBEngine::Network::SelectPoller::handleNotifications(int & countReady, fd_set & readFDs, fd_set & writeFDs) 行 38	C++
+
+	baseapp.exe!KBEngine::Network::EventPoller::triggerRead(int fd) 行 84	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReceiver::handleInputNotification(int fd) 行 44	C++
+
+ 	baseapp.exe!KBEngine::Network::TCPPacketReceiver::processRecv(bool expectingPacket) 行 105	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReceiver::processPacket(KBEngine::Network::Channel * pChannel, KBEngine::Network::Packet * pPacket) 行 67	C++
+
+ 	baseapp.exe!KBEngine::Network::TCPPacketReceiver::processFilteredPacket(KBEngine::Network::Channel * pChannel, KBEngine::Network::Packet * pPacket) 行 131	C++
+
+ 	baseapp.exe!KBEngine::Network::Channel::addReceiveWindow(KBEngine::Network::Packet * pPacket) 行 1024	C++
+
+ 	baseapp.exe!KBEngine::Network::Channel::processPackets(KBEngine::Network::MessageHandlers * pMsgHandlers, KBEngine::Network::Packet * pPacket) 行 1179	C++
+
+ 	baseapp.exe!KBEngine::Network::PacketReader::processMessages(KBEngine::Network::MessageHandlers * pMsgHandlers, KBEngine::Network::Packet * pPacket) 行 189	C++
+
+ 	baseapp.exe!KBEngine::BaseappInterface::onExecScriptCommandBaseappMessagehandler_stream::handle(KBEngine::Network::Channel * pChannel, KBEngine::MemoryStream & s) 行 52	C++
+
+ 	baseapp.exe!KBEngine::EntityApp<KBEngine::Entity>::onExecScriptCommand(KBEngine::Network::Channel * pChannel, KBEngine::MemoryStream & s) 行 1350	C++
+
+ 	baseapp.exe!KBEngine::Network::Bundle::newMessage(const KBEngine::Network::MessageHandler & msgHandler) 行 270	C++
+
+	baseapp.exe!KBEngine::Network::Channel::send(KBEngine::Network::Bundle * pBundle) 行 743	C++
+
+

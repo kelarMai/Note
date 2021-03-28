@@ -1,0 +1,191 @@
+1. socket 地址结构体  sockaddr (另： sockaddr_in 用于ip4, sockaddr_in6 用于 ip6)、 sockaddr_storage;
+2. 十进制字符串的ipv4 地址和网络字节序整数转换
+	#include<arpa/inet.h>
+	in_addr_t inet_addr(const char* strptr);
+	int inet_aton(cosnt char* cp,struct in_addr* inp);
+	char* inet_ntoa(struct in_addr in );
+
+	int inet_pton (int af,const char* src,void* dst);
+	cosnt char* inet_ntop(int af,const void* src,char*dst,socklen_t cnt); //af 为地址族
+3. 创建 socket  	
+	int socket(int domain,int type,int protocal)
+4. 可以使用 fcntl (包含在 fcntl.h 文件中) 对 socket 增添其他属性，例如 SOCK_NONBLOCK SOCK_CLOEXEC 等；
+5. 绑定 socket 
+	int bind(int sockfd,const struct sockaddr* my_addr,socklen_t addrlen);
+服务端需要绑定 socket ，客户端一般可以采用匿名方式，即由系统自动分配 socket 地址，即使用 sin_addr.s_addr = INADDR_ANY 格式
+6. 监听 socket 创建监听队列 
+	int listen (int sockfd,int backlog); (backlog 全连接监听队列的 maxlength)
+7. 接收连接 
+	int accept(int sockfd,struct sockaddr * addr,socklen_t* addrlen);  函数返回一个新的 socket 用来唯一标识该连接 
+accept 函数是从监听队列中取出存在的连接，而不管该连接的状态; 
+8. 发起连接
+	int connect(int sockfd,const struct sockaddr * serv_addr,socklen_t addrlen); 连接成功后，就是 sockfd 标识该连接
+9. 关闭连接 	
+	#include<unistd.h>
+	int close (int fd);  //减少该 socket 在进程中的引用计数。
+
+	#include<sys/socket.h>
+	int shudown(int sockfd,int howto); //终止连接 howto 控制关闭的读写模式
+
+另：如果在父进程中建立 socket 连接，在 fork 建立子进程时，可以对该进程进行引用，同时该进程的引用计数 +1
+10. TCP 流的进程读写
+	ssize_t recv(int sockfd,void* buf,size_t len,int flags)
+	ssize_t send(int sockfd,const void* buf,size_t len,int flags);   //flags 通常设置为 0 
+11. 使用 tcp 方式时，客户端可以不用 bing 绑定本机地址/端口；只使用 connect 函数连接 server 就好了(需要创建服务端的 sockaddr_in)。而如果使用 upd 方式传输数据时，需要先创建本地的 sockaddr_in ，使用 bind 进行绑定，再使用 sendto 发送。
+12. UDP 流的数据报读写
+	ssize_t recvfrom(int sckfd,void* buf,size_t len,int flags,struct sockaddr* src_addr,socklen_t* addrlen);
+	ssize_t sendto(int sockfd,const void* buf,size_t len,int flags,const struct sockaddr* dest_addr,socklen_t addrlen);
+13. 通用数据读写函数
+	ssize_t recvmsg(int sockfd,sruct msghdr* msg,int flags)
+	ssize_t sendmsg(int sockfd,struct msghdr* msg,int flags)
+	其中的 msghdr 结构体包含了 socket 地址，地址长度，分配存放消息的内存等变量
+14. 查看已连接 socket 的本端和远端 sockaddr 
+	int getsockname(int sockfd,struct sockaddr* address,socklen_t* address_len);
+	int getpeername(int sockfd,struct sockaddr* address,socklen_t* address_len);
+15. 之前说过可以使用 fcntl 函数修改 socket 的属性；在 socket.h 文件中也有相似功能的可用函数
+	int getsockopt(int sockfd,int level,int option_name,void* option_value,socklen_t* restrict option_len);
+	int setsockopt(int sockfd,int level,int option_name,const void* option_value,socklen_t option_len);
+16.  
+	int reuser = 1;
+	setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&reuse,sizeof(reuse))
+	通过设置 SO_REUSEADDR 可以使处于 time_wait 状态的 socket 地址被重用。
+17. SO_RCVBUF 和 SO_SNDBUF 修改接收/发送缓冲区的大小，也可以通过修改内核文件参数 /proc/sys/net/ipv4/tcp_rmem 等来修改该值
+18.	根据主机名或主机地址获取主机信息
+	struct hostent* gethostbyname(const char* name);
+	struct hostent* gethostbyaddr(cosnt void* addr,size_t len,int type);
+返回的 hostent 结构体包含了该地址的基本信息
+19.	根据服务名或端口号获取服务信息。
+	struct servent* getservbyname(const char* name ,const char* proto);
+	struct servent* getservbyport(int port ,const char* proto);
+20. 创建管道；管道一边用来写入，一边用来读出；
+	int pipe (int fd[2]);
+	fd[0] 只能读出，fd[1]只能写入；管道容量大小为 65536 bytes
+创建双向管道：
+	int socketpair(int domain,int type,int protocol,int fd[2]);  
+	其中 domain 只能使用 unix 本地域协议族 AF_UNIX
+21. 若要把标准输出重定向到一个文件或网络连接中，可以使用复制文件描述符的方法。
+	int dup(int file_descriptor);
+	int dup2(int file_descripter_one ,int file_descripter_two);
+例：
+	close(STDOUT_FILENO);//关闭标准输出文件描述符 1
+	dup(connfd); //因为 dup 总是返回系统中最小的可用文件描述符，所以实际返回值是 1
+	printf("aaaaaaa\n"); //输出重定向到 confd socket 中
+22. 分散读出或者写入数据到内存块中
+	ssize_t readv(int fd,const struct iovec* vector,int count);
+	ssize_t writev(int fd,const struct iovec* vector,int count);
+	相当于简化版的 recvmsg ,sendmsg; iovec 包括 iov_base 和 iov_len 分别指定内存块和内存块大小
+23. 在两个文件描述符间直接传输数据（内核中操作）
+	ssize_t sendfile(int out_fd,int in_fd,off_t* offset,size_t count);
+	相对于22的方法，如果是传输文件数据，22需要打开文件再读出文件数据到内存后，再进行传输，而23只需要打开文件，就可以直接把文件内容写入到 socket 中
+24. 申请内存空间，可以作为进程通信的共享内存
+	void* mmap(void* start,size_t length,int prot,int flags,int fd,off_t offset);
+	int munmap(void* start,size_t length);
+25. 管道和文件描述符之间的数据拷贝
+	ssize_t splice(int fd_in,loff_t* off_in,int fd_out,loff_t* off_out,size_t len,unsigned int flags);
+	例子：
+	int ret = splice(confd,NULL,pipefd[1],NULL,32768,SPLICE_F_MORE | SPLICE_F_MOVE)
+	ret = splice(pipefd[0],NULL,connfd,NULL,32768,SPLICE_F_MORE | SPLICE_F_MOVE); 
+26.	在两个管道之间复制数据
+	ssize_t tee(int fd_in ,int fd_out,size_t len,unsigned int flags);
+27. linux 服务器程序通常是可配置运行的.
+	setgid() setuid() 可以设置运行用户.
+28. linux 下每个进程都隶属于某个进程组.所以每个进程都包含一个进程组ID (PGID). 获取，修改进程组的 PGID
+	pid_t getpgid(pid_t pid);
+	itn setpgid(pid_t pid,pid_t pgid);
+29. 创建关联进程组的会话
+	#include<unistd.h>
+	pid_t setsid(void);
+30. 获取 linux 系统资源情况
+	int getrlimit (int resource,struct rlimit* rlim);
+	int setrlimit(int resource,const struct rlimit* rlim);
+	struct rlimit{
+	rlim_t rlim_cur;
+	rlim_t rlim_max;
+	}
+31. 获取和修改进程工作目录
+	char* getcwd(char* buf,size_t size);
+	int chdir(const char* path);
+	改变进程根目录
+	int chroot(const char* path);
+32. 可以将服务器程序以守护进程的方式运行
+33. 服务器的一般可以分为三个模块：
+	I/O 处理单元; 逻辑单元;存储单元;
+34.	请求队列通常处理为一个 池  
+35. 非阻塞情况下，accept send recv 没有事件时的 errno 为 EAGAIN 或者 EWOULDBLOCK 而对于 connect ，errno 为 EINPROGRESS 
+36. I/O 通知机制 ： I/O 复用，SIGIO 信号
+	常用 I/O 复用函数： select poll epoll_wait 
+I/O 模型包括：阻塞 I/O, I/O 复用,SIGI信号,异步 I/O ; 
+37. 事件处理模式 Reactor(常用于同步I/O) 和 Proactor(常用于异步I/O) ；前者是主线程把就绪的连接 socket 插入到请求队列中，而后者是主线程把 socket 中读取到的数据封装成一个任务对象，然后该对象插入到请求列表中。
+38. 有限状态机即把处理消息分为有限个不同的状态，在处理时，先分析内容的状态（或者说类型），然后根据状态把消息使用类似 switch if else等方法分发给不同的函数；
+39. I/O 符用本身是阻塞的。  select poll epoll ;
+40. select 函数的 API
+	int select (int nfds,fd_set* readfds,fd_set* writefds,fd_set* exceptfds,struct timeval* timeout);
+	FD_ZERO(fd_set* fdset); 清除 fdset 的所有位
+	FD_SET(int fd,fd_set* fdset); 设置 fdset 的位 fd
+	FD_CLR(int fd,fd_set* fdset); 清除
+	int FD_ISSET(int fd,fd_set* fdset);
+select 和 accept 的配合主要是通过把主 socket (最开始和端口 bind 的socket )放入到 fd_set 结构中，然后通过 FD_ISSET 查询是否有消息到达。如果是新的连接，就把新连接也放入到 fd_set 结构中，如果是 fd_set 结构中的某个 socket 有可读消息，那就取出消息并进行处理。 因为如果有新连接到达，accept 都会为新连接创建一个 socket 所以主 socket 只会用来处理是否有新连接；所以如果使用 FD_ISSET 检测主 socekt ，发现有新消息，就是有新连接的加入。
+41. poll 系统；
+	int poll(struct polldf fds[],nfds_t nfds,int timeout);
+	fds 是一个数组结构，存放所有的文件描述符
+	polldf 结构标记所有可读可写和异常等事件
+	struct pollfd{
+		int fd;    			//文件描述符
+		short events;		//注册的事件
+		short revents;		//实际发生的事件
+	}
+	select 和 poll 都是把文件描述符放在程序的缓存结构中，就像 select 的是 fd_set 结构，poll 是 polldf 结构数组；每次调用 select 和 poll 时都需要把该缓存结构传递到内核中，让内核进行比较操作；如果有就绪态的文件描述符，则都返回就绪的文件描述符数量。可是究竟是哪个文件描述符就绪呢，是不知道的，还需要调用其他函数判断； select 调用的是 FD_ISSET ，poll 调用的是 if (fds[i].revents & POLLIN) 类似判断。
+42. epoll 把文件描述符上的事件都放到内核的事件表中。操作内核的时间表，需要额外的文件描述符；
+	int epoll_create( int size );
+	其他对事件表中事件的操作函数
+	int epoll_ctl( int epfd,int op,int fd,struct epoll_event* event );
+	int epoll_wait(int ipfd, struct epoll_event* events, int maxevents,int timeout);
+	使用 epoll 方法怎么得到就绪态的文件描述符：
+	int ret = epoll_wait(epollfd,events,MAX_EVENT_NUMBER，-1);
+	for(int i = 0;i<ret; i++){
+		int sockfd = events[i].data.fd;
+	}
+	工作模式有两种 ET LT 
+	ET 模式下，如果有信息到达，调用 epoll_wait 时会重新初始化并设置 events ；所以如果调用 eopll_wait 后收到消息应该马上处理，不然在下一次调用格式被重新初始化，没有被处理的消息就会不见了。LT 模式则是增加的模式修改 event 结构。
+43.  EPOLLONESHOT 事件标记可以使单个 socket 被一个线程操作，在线程处理完该事件消息后，需要使用 epoll_ctl 函数重置 socket 上的 EPOLLONESHOT 事件。
+44. 进程发送给另一个进程信号的方法：
+	int kill(pid_t pid,int sig);
+	信号处理
+	typedef void(*__sighandler_t) (int);
+	或者
+	#define SIG_DEL ((__sighandler_t) 0) //使用默认处理
+	#define SIG_IGN ((__sighandler_t) 1) //忽略目标信号
+45. 为信号设置处理函数
+	_sighandler_t singal (int sig,_sighandler_t _handler)
+	sig 为捕获的信号类型，_handler 是函数指针，指向 sig 的处理函数
+	也可以使用更健壮的处理方式
+	int sigaction(int sig,const struct sigaction* act,struct sigaction* oact);
+	sigaction 结构中包含信号处理函数，信号集，进程信号掩码和接收到信号时的行为(flags)；其中信号集是一个长整型数组，和 fd_set 类似。也有相应的一套函数用来设置其值。
+46. SO_REVTIMEO and SO_SNDTIMEO 分别用来设置 socket 接收和发送数据的超时时间，作为定时器用。
+47. 定时器的实现方式： 基于升序链表的定时器(如何激活定时器，可以使用 alam 函数进行周期性触发);  时间轮 ;时间堆(最小堆结构);
+48. 服务，其实也就是一个进程。 net 服务，就是一个绑定了地址端口的进程
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+附： 
+1. Linux 下很多函数的可重入版本的命名规则都是在原函数名的尾部加上 _r (re-entrant);
+2. 创建进程 fork() 创建线程 pthread_create()
+3. 应用程序和底层（内核）是有各自独立的缓冲区的，一般来说，使用 socket 等文件描述符时，会不断地把数据从应用程序写入到底层（内核）的缓冲区中，然后再由底层进行发送等操作；或者把数据从底层复制（读入）到应用程序中，然后再在应用程序中对数据进行处理。如果应用程序不需要知道数据的具体情况，只需要知道数据是否存在，如果存在就直接发送；那么把数据读入到应用程序再复制到底层就会很麻烦了。相应的措施是应用程序只检查文件是否存在，然后直接让底层读取文件并发送。
+
+

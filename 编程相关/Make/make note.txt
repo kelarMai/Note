@@ -1,0 +1,101 @@
+1. Makefile 的规则：
+ 	target ...: prerequisites ...
+ 		command 
+ 		...
+target 可以为目标文件 或最终执行文件； prerequisites 为生成target所需文件 command 为任意make执行的shell 命令。
+2. prerequisites中如果有一个以上的文件比target文件要新的话，command所定义的命令就会被执行。
+3. 如果target冒号后什么也没有，那么，make就不会自动去找文件的依赖性，也就不会自动执行其后所定义的命令
+4. 可以在MakeFile中定义并使用变量；例如
+	objects = main.o kbd.o command.o \
+				insert.o search.o 
+	edit : $(objects)
+		cc -o edit $(objects)
+5. make可以自动推导文件及其依赖关系后的命令，如只要看到一个[.o]文件，会自动把[.c]文件加载依赖关系中。并且自动推导出 cc -c xx.c 命令。 ；使用自动推导时，若有伪目标文件，可以使用	.PHONY: 标记，显式地标记目标为伪目标；例： .PHONY:clean 
+6. [.h] 还可以收拢；例如：
+	kbd.o command.o files.o : command.h 
+7. clean 的使用技巧：
+    clean :
+        -rm edit $(objects) 
+在rm 命令前加 - 可以让即使出现问题也能继续执行；该命令一般放在MakeFile文件最后。
+8. Makefile里主要包含了五个东西：显式规则、隐晦规则、变量定义、文件指示和注释
+9. 在Makefile中的命令，必须要以[Tab]键开始
+10. include <filename> 可以包含其他的MakeFile 
+11. 找到文件中的第一个目标文件（target），并把这个文件作为最终的目标文件。
+12. command是命令行，如果其不与“target:prerequisites”在一行，那么，必须以[Tab键]开头，如果和prerequisites在一行，那么可以用分号做为分隔。
+	例：
+      targets : prerequisites ; command
+        command
+        ...
+13. 可以使用"*"，"?","[...]"通配符
+14. 使用 VPATH 变量指定除了当前目录之外的其他文件搜寻目录；使用 "：" 进行分割。
+	例：	VPATH = src:../headers
+15. 关键字 vpath (上面的是变量，这里的是关键字)，可为不同文件指定路径。
+使用方法：
+    1、vpath <pattern> <directories>
+    为符合模式<pattern>的文件指定搜索目录<directories>。
+    2、vpath <pattern>
+    清除符合模式<pattern>的文件的搜索目录。
+    3、vpath
+    清除所有已被设置好了的文件搜索目录。
+注：vapth使用方法中的<pattern>需要包含"%"字符
+例：	
+	vpath %.h ../headers
+	vpath %.c foo:bar:../sources
+16. $@ 表示目标文件；$^ 表示所有的依赖文件； $< 表示第一个的依赖文件
+17. $(foo) 表示执行,函数foo；
+18. 静态模式 
+	<targets ...>: <target-pattern>: <prereq-patterns ...>
+		<commands>
+		...
+	<targets ...> 指定目标文件；<target-pattern ...>指定目标文件通配模式；<prereq-patterns ...> 指定依赖文件的通配模式，依赖文件的生成是由两个通配模式结合生成的。
+	例：		foo.o :%.o:%.c
+	该规则等价为 foo.o :foo.c  ，就是说，目标文件foo.o根据其通配模式%.o得到了"foo"字符串，再根据"%.c"生成了foo.c这一个依赖文件。
+19. 自动生成依赖性 (还是没搞懂)一般编译器支持 -M 选项，即自动寻找源文件中包含的头文件。  
+20. 使用参数“-n”或“--just-print”执行命令会只显示命令的执行顺序而不会执行命令；有利于调试MakeFiles
+21. 如果你要让上一条命令的结果应用在下一条命令时，你应该使用分号分隔这两条命令。
+22. "-"无论命令是否出错都认为是成功执行的；在make调用是使用"i" 或者 "--ignore-erroes"参数，会忽略错误;以".IGNORE"作为目标，那么规则中的所有命令将会忽略错误。 使用"-k" 或"--keep-going"参数，如果某规则中的命令执行出错，终止该规则，继续执行其他规则。
+23. 使用define endef 定义命令包， 例：
+    define run-yacc
+    yacc $(firstword $^)
+    mv y.tab.c $@
+    endef
+
+    foo.c ：foo.y
+    	$(run-yacc)
+24. make可以嵌套执行；上层变量可以传递到下层中，但不会覆盖下层相同变量，除非使用"-e"参数。传递到下层中的变量定义：export <variable ...>   不想传递的变量 unexport<variable ...>; MAKEFLAGS 变量保存了调用make时的参数，并且会作为系统级的环境变量被传到下层；可以在上层makefile文件中使用 "MAKEFLAGS =" 语法重定义该变量。
+25. 变量赋值时，使用"="可以让右侧中的变量不一定非要是已定义好的值，也可以使用后面定义的值
+    如果是使用":=" 则右侧的值一定是要在前面就定义好的。
+    如果在定义变量时， 变量后跟随有空格并且空格后有#注释符，那么空格也会被当作变量的值被赋予。
+    例：
+        space := /usr/local     #这是个路径
+        等于 space := "/usr/local    "  这样的一个值。
+    "?=" 含义是：如果FOO没有被定义过，那么变量FOO的值就是“bar”，如果FOO先前被定义过，那么这条语将什么也不做
+26. 条件判断： 
+    ifeq() / ifneq() / ifdef() / ifndef()
+        <text-if-true>
+    else
+        <text-if-false>
+    endif
+27. 函数调用： $(<function> <arguments>) <arguments>是函数的参数，参数间以逗号“,”分隔，而函数名和参数之间以“空格”分隔。
+可用函数：
+    字符串处理函数：
+        $(subst <from>,<to>,<text>)     字符串替换
+        $(patsubst <pattern>,<replacement>,<text>)          模式字符串替换函数
+        $(strip <string>)           去空格函数
+        $(findstring <find>,<in>)           查找字符串
+        $(filter <pattern...>,<text>)           过滤函数
+        $(filter-out <pattern...>,<text>)       反过滤函数
+        $(sort <list>)          排序
+        $(word <n>,<text>)      取单词函数
+        $(wordlist <s>,<e>,<text>)      取单词串函数
+        $(words <text>)             单词个数统计函数
+        $(firstword <text>)         首单词函数
+    文件名操作函数：
+        $(dir <names...>)           取目录函数
+        $(notdir <names...>)        取文件函数
+        $(suffix <names...>)        取后缀函数
+        $(basename <names...>)      取前缀函数
+        $(addsuffix <suffix>,<names...>)        加后缀函数
+        $(addprefix <prefix>,<names...>)        加前缀函数
+        $(join <list1>,<list2>)             连接函数
+28. 

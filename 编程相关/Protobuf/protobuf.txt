@@ -1,0 +1,37 @@
+工作步骤：
+1.编辑 .proto文件，使用给定格式编辑message的数据结构；
+2.使用Protobuf编译器把.proto文件编译成目标语言的文件格式；
+3.使用目标语言写代码时，把第二步中是生成的文件包含进来，
+例如目标语言为C++，会生成一个.h  一个.cpp文件，文件生成一个类结构；生成对象，调用对象方法赋值和传输序列化数据。
+4.Message 可以嵌套；使用Import引入其他.proto文件的消息。
+5.使用google::protobuf::compiler 包 进行动态编译。
+
+6. required 为必须填写的属性； optional  为可选择的属性；需要填写的属性一定要有一个标签；还有一个repeated 标签，用来定义一个属性而为一个对象添加多个该属性。
+8.GOOGLE_PROTOBUF_VERIFY_VERSION  set in the front of cpp and ShutdownProtobufLibrary()  in the last of cpp
+9. 更新规则： 	A：不能更改之前变量的数字标签
+				B: 不能删除或增加任何的require 类型的变量
+				C: 可以删除 optional 的变量
+				D: 可以增加 optional 、repeated 类型变量，增加的变量使用的标签一定是新的（即使使用该标签的变量已经删除，也不能使用）
+10.可用类型：bool, int32, float, double,string
+11.简单示例 ：	syntax = "proto2";
+				package Individual;
+				message AddressBook {
+ 				 repeated string name = 1;
+				}
+12.Parsing and Serialization（序列化和解析）
+bool SerializeToString(string* output) const;
+	 serializes the message and stores the bytes in the given string. Note that the bytes are binary, not text; we only use the string class as a convenient container.
+bool ParseFromString(const string& data);
+	parses a message from the given string.
+bool SerializeToOstream(ostream* output) const;
+	writes the message to the given C++ ostream.
+bool ParseFromIstream(istream* input);
+	parses a message from the given C++ istream.
+
+13.	google::protobuf packets 是代码的核心接口，主要是线程的设置；
+	google::protobuf::io packets 管理并修改输入输出、编码解码方法；
+	google::protobuf::util   管理message结构的比较
+	google::protobuf::compiler   parsing .proto file and generating code base on them.
+14. ZeroInputCopySystem 和 ZeroOutputCopySystem 和fstream 的read write 的区别是前者是minisize data.
+15.可以使用import 为一个.proto引入另一个.proto的内容
+
