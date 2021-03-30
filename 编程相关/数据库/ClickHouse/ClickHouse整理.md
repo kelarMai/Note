@@ -116,6 +116,19 @@ ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blo
 - `Nested`
 > 该类型为复合类型；支持一层，<font color="#dd0000">是否支持多层？</font>
 
+- SELECT
+    + WITH
+    > 别称，表达式的命名；
+    + SAMPLE
+    > 近似查询过程；随机选择部分数据进行查询或者计算；  
+    该命令只能在 MergeTree 族类型的表中使用，且抽样表达需要在建表时即确定。即建表时，使用 `SAMPLE BY` 命令确定用来抽样的行。
+    + PREWHERE
+    > 把部分 where 命令提前，用于优化查询；第一个 where 过滤可以使用 prewhere 替代。
+    + GROUD BY
+    > 
+
+
+
 ---
 
 ## 常用函数
@@ -124,7 +137,7 @@ ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blo
 ---
 
 ## 数据类型
-- 
+- ClickHouse 的空数据表示为 NULL 和 NaN ?
 - 
 
 ---
