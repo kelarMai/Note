@@ -47,6 +47,23 @@
 
 用户权限配置文件`/etc/clickhouse-server/users.xml`，配置[参考地址](https://clickhouse.tech/docs/zh/operations/configuration-files/)
 
+
+文件分布\
+运行文件：/usr/bin/clickhouse-server  链接： /usr/bin/clickhouse\
+
+<span id="new_user"><span>
+
+clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建了 clickhouse 的用户组和用户，使用 `cat /etc/passwd` 可以看到，但是该用户的登录 shell 为 /bin/false 即不能切换为该用户（虽然可以更改，但没必要。）
+
+<span id="modify_file_privilege"><span>
+
+安装时，创建并修改用户权限的目录/文件
+
+    chown --recursive clickhouse:clickhouse '/etc/clickhouse-server'
+    chown --recursive clickhouse:clickhouse '/var/log/clickhouse-server/'
+    chown --recursive clickhouse:clickhouse '/var/run/clickhouse-server'
+    chown clickhouse:clickhouse '/var/lib/clickhouse/'
+
 ---
 
 ## 部署方法
@@ -70,17 +87,25 @@
     
     CREATE TABLE view_table_name as local_table_name ENGINE = Distributed (test_1shard_1replica,database_name, )
 
-
+[详细步骤](https://segmentfault.com/a/1190000038318776)
 
 ---
 
 ## 常见错误
 
 - 无法启动
-    + 重现方法： 使用 `sudo service clickhouse-server start` 命令或者 `service clickhouse-server start` 命令启动时，都无法启动，产生 `Effective user of the process (root) does not match the owner of the data (clickhouse)` 这样的错误。  
-    + 可能原因：因为安装 clickhouse 时，创建了一个 clickhouse 的用户和用户组（可以使用`ls -l /var/log/clickhouse-server/`命令查看相关文件的用户属性），日志文件的所属用户是 clickhouse 用户和用户组的，而 `/usr/bin/clickhouse` 则是 root 用户和用户组的；这里应该是和 clickhouse 的用户管理，linux 的用户管理相关。  
-    + 相关分析： <font color="#dd0000">这里需要先重新了解 linux 的用户管理机制，sudo 的安装机制，还有 clickhouse 的用户机制，然后再能完全的解决。</font>  
-    + 暂行办法： 直接使用 `clickhouse-server start` 命令来启动，可是日志会直接输出到控制台。或者根据提示，使用 `sudo -u clickhouse clickhoouse-server start` 来启动
+    + 重现方法： 
+        * 使用 `sudo service clickhouse-server start` 命令启动时，产生 `Effective user of the process (root) does not match the owner of the data (clickhouse)` 这样的错误。
+        * 使用其他普通用户运行 `clickhouse-server start` 可以运行，但是无法读取默认的配置文件 `/etc/clickhouse-server/config.xml`；如果运行 `clickhouse-server --config = /etc/clickhouse-server/config.xml` 则会因为没有权限而无法访问 `config.xml` 文件
+    + 原因：因为安装 clickhouse 时，创建了一个 clickhouse 的[用户和用户组](#new_user)，clickhouse 的很多相关文件都是属于该用户的；
+    + 解决方法： 
+        * 或者[修改文件权限](#modify_file_privilege)，修改文件的所属用户为该用户或者 root. 然后使用 `sudo clickhouse-server start` 命令来启动（不推荐）
+        * 使用 `sudo clickhouse start` 启动服务端，该命令会运行一个脚本文件，脚本命令应该为 `su -s /bin/sh 'clickhouse' -c '/usr/bin/clickhouse-server --config-file /etc/clickhouse-server/config.xml --pid-file /var/run/clickhouse-server/clickhouse-server.pid --daemon'`；即启动一个 clickhouse 的 shell 然后后台启动该服务。停止运行使用命令 `sudo clickhouse stop`
+
+- 服务运行时，重启电脑，服务仍旧为启动状态，无需再启动，可以先尝试使用 `clickhouse-client` 连接。
+
+- 远程连接
+方法：先[修改配置](https://blog.csdn.net/zhangpeterx/article/details/95059059)；如果无法连接 ssl ，可以先[生成证书](https://blog.csdn.net/liuchunming033/article/details/48470575)，再根据 config.xml 的 <openSSL> 标签，把证书放置到指定位置。即可连接。
 
 ---
 
@@ -116,18 +141,47 @@ ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blo
 - `Nested`
 > 该类型为复合类型；支持一层，<font color="#dd0000">是否支持多层？</font>
 
-- SELECT
-    + WITH
-    > 别称，表达式的命名；
-    + SAMPLE
-    > 近似查询过程；随机选择部分数据进行查询或者计算；  
-    该命令只能在 MergeTree 族类型的表中使用，且抽样表达需要在建表时即确定。即建表时，使用 `SAMPLE BY` 命令确定用来抽样的行。
-    + PREWHERE
-    > 把部分 where 命令提前，用于优化查询；第一个 where 过滤可以使用 prewhere 替代。
-    + GROUD BY
-    > 
+SELECT
+- WITH
+> 别称，表达式的命名；
+- SAMPLE
+> 近似查询过程；随机选择部分数据进行查询或者计算；  
+该命令只能在 MergeTree 族类型的表中使用，且抽样表达需要在建表时即确定。即建表时，使用 `SAMPLE BY` 命令确定用来抽样的行。
+- PREWHERE
+> 把部分 where 命令提前，用于优化查询；第一个 where 过滤可以使用 prewhere 替代。
+- GROUP BY
+> 把数据分组合并；SELECT 的元素只能是被 GROUP BY 的元素或者是对某列进行 aggregate 操作(SUM,COUNT 等函数)；  
+WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多张相应的表。具体查看[网址](https://clickhouse.tech/docs/en/sql-reference/statements/select/group-by/)
+- LIMIT [offset_value, ]n BY k
+> 和 LIMIT 不同，这个是获取 n 种值的 k 的行；
+- HAVING Clause
+> 在 group by 之后，再进行筛选。和 where 功能类似
+- FORMAT Clause
+> 用于对数据序列化
+- DISTINCT 
+> 获取某一列数据的所有类型，结果和 GROUP BY 类似；如果有 ORDER BY ，则先获取单一类型，再进行排序。
+
+| a | b |
+| --- | --- |
+| 2 | 1 |
+| 1 | 2 |
+| 3 | 3 |
+| 2 | 4 |
+
+    SELECT DISTINCT a FROM test ORDER BY b DESC 
+
+会先获取 a 的单一值，从前往后就是 2 1 3，最后一个 2 是相同的，则不纳入。然后再根据 b 来排序。结果为\
+3 1 2
+
+- 
 
 
+--- 
+
+## 功能
+`partition` ：分区\
+`replicate` : 副本\
+`shard` : 集群
 
 ---
 
@@ -142,7 +196,7 @@ ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blo
 
 ---
 
-## 索引
+## 索引相关
 
 稀疏索引和稠密索引：稀疏索引，只有部分的行/列的数据存在索引，没有索引的行/列则通过相邻索引然后顺序查找的方式来获取；稠密索引，所有的行/列都有相应的索引，可以通过索引直接获取数据。
 
