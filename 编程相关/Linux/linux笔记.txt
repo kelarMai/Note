@@ -3,4 +3,5 @@
 	gcc -l 使用动态库 -L 可以制定库的路径
 	gcc -c   ; ar -r lib 编译静态库
 	gcc -l -static 链接静态库
-3. 
+3. 后台进程和前台进程的运行和切换：
+	https://www.jianshu.com/p/4041c4e6e1b0

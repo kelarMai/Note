@@ -87,7 +87,26 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
     
     CREATE TABLE view_table_name as local_table_name ENGINE = Distributed (test_1shard_1replica,database_name, )
 
+
+### 尝试
 [详细步骤](https://segmentfault.com/a/1190000038318776)
+
+1. 修改 /etc/hosts 中的 hostname，添加 ip 地址到 hostname 的映射
+2. （暂不设置 ip mac 地址，不关闭防火墙，）
+3. 永久关闭防火墙
+3. 设置公钥认证
+3. 时钟同步
+4. 安装 jdk
+5. 安装 zookeeper
+    启动 zookeeper 时报错找不到 JAVA_HOME ，[解决方法](https://blog.csdn.net/HACKERRONGGE/article/details/102485260)
+6. 安装必要的依赖
+7. 在添加 <include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from> 时，这个新的 file 的内容一定要准确，特别是 host 的地址。
+    添加了 metrica.xml 后，可以添加 <clickhouse_remote_servers></clickhouse_remote_servers> 节点，然后在主 config.xml 文件的中修改 <remote_servers incl="clickhouse_remote_servers"></remote_servers> ；
+    可以不添加 <include_from>file_path</include_from> 而直接在 config.d 文件夹中新加一个 config.xml ，然后在该文件中添加 <remote_servers></remote_servers> 内容。
+    区分：如果是使用额外的文件，即在 config.xml 中添加 <include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from> 然后在 metrica.xml 中添加 <remote_servers></remote_servers> ；那么在 config.xml 文件中也必须要修改为 <remote_servers incl="remote_servers"></remote_servers>。而如果只是在 config.d 中添加新的 config.xml 文件，原来的 config.xml 文件就不需要做修改。
+    最好的方法还是添加 config.d/config.xml 文件
+8. 建表，使用 clickhouse 的远程功能即可。（注意防火墙是否关闭/如果不关闭防火墙，端口是否打开）
+
 
 ---
 

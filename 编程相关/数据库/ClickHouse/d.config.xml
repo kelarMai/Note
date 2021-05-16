@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<yandex>
+    <listen_host>::</listen_host>
+    <remote_servers>
+        <!-- 4分片1备份 -->
+        <cluster_4shards_1replicas>
+            <!-- 数据分片1  -->
+            <shard>
+                <internal_replication>false</internal_replication>
+                <replica>
+                    <host>cknode01</host>
+                    <port>9000</port>
+                </replica>
+                <replica>
+                    <host>cknode02</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+            <!-- 数据分片2  -->
+            <shard>
+                <internal_replication>false</internal_replication>
+                <replica>
+                    <host>cknode02</host>
+                    <port> 9000</port>
+                </replica>
+                <replica>
+                    <host>cknode03</host>
+                    <port> 9000</port>
+                </replica>
+            </shard>
+            <!-- 数据分片3  -->
+            <shard>
+                <internal_replication>false</internal_replication>
+                <replica>
+                    <host>cknode03</host>
+                    <port>9000</port>
+                </replica>
+                <replica>
+                    <host>cknode04</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+            <!-- 数据分片4  -->
+            <shard>
+                <internal_replication>false</internal_replication>
+                <replica>
+                    <host>cknode04</host>
+                    <port>9000</port>
+                </replica>
+                <replica>
+                    <host>cknode01</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </cluster_4shards_1replicas>
+    </remote_servers>
+</yandex>

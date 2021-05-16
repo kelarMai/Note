@@ -1,0 +1,4 @@
+/etc/hostname vs /etc/hosts vs /etc/sysconfig/network 三个文件的作用：https://superuser.com/questions/1195926/etc-hostname-vs-etc-hosts-vs-etc-sysconfig-network-in-centos7
+
+
+

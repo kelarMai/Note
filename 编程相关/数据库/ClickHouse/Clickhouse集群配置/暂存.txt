@@ -1,0 +1,22 @@
+minimalcnetos1 
+    IP  192.168.80.129
+    HWADDR  00:0C:29:97:72:BA
+    /etc/hostname   cknode01
+
+minimalcnetos2
+    IP  192.168.80.131
+    HWADDR  00:50:56:23:B7:D3
+    /etc/hostname    cknode02
+
+
+
+minimalcnetos3
+    IP  192.168.80.132
+    HWADDR  00:50:56:2D:C3:49
+    /etc/hostname    cknode03
+
+
+minimalcnetos4
+    IP  192.168.80.133
+    HWADDR  00:50:56:39:D3:DA
+    /etc/hostname    cknode04
