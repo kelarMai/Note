@@ -1,0 +1,14 @@
+参考： https://cmake.org/cmake/help/latest/guide/tutorial/index.html
+
+常用命令：
+    mkdir build && cd build && cmake ..
+    cmake --build .
+    cmake --install .  
+        cmake --install . --prefix "/home/username/install_dir"  
+        cmake --install . --prefix "../install_dir"
+    ctest -N 
+    ctest -W
+
+根据 Step3:
+    target_include_directories() 函数使用
+
