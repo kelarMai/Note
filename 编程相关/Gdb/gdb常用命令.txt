@@ -51,4 +51,7 @@ gdb a.out
 (gdb) break filename.cpp:linenum thread all 	//所有线程在该位置打断点
 
 打开 core dump 文件方法
-gdb [exec file][core file]  如  gdb ./test test.core
+gdb [exec file][core file]  如  gdb ./test [-c] test.core
+然后输入命令： bt
+
+gdb quote_receiver_xtp -c core.34800
