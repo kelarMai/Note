@@ -46,6 +46,16 @@ copy 函数生成的新变量和原变量的地址是不一样的，可是 copy 
 deepcopy 函数才能深层拷贝。
 
 
+环境迁移方法：
+1. 但不推荐使用该方法，conda 的版本不同会出现 ResolvePackageNotFound 问题
+	conda env export > environment.yml
+	conda create -n py_name -f environment.yml
+
+2. https://stackoverflow.com/questions/50777849/from-conda-create-requirements-txt-for-pip3 ；生成 requirements.py 文件；推荐使用该方法。
+	pip freeze > requirements.txt
+	pip install -r requirements.txt
+
+
 
 
 
@@ -58,3 +68,15 @@ deepcopy 函数才能深层拷贝。
 4. 所以方式 array[0][2] array[0,2] 是等价的。(重载了 __getitem__ 方法)
 5. panda 的主要数据结构 series dataframe 
 6. 在 panda 中，NaN 标识缺失或者 NA 值； 在 series 中建立的表结构在进行算术运算时，会自动对其不同索引的值。
+
+
+
+jupyter-lab
+1. 远程访问
+	参考[https://zhuanlan.zhihu.com/p/166425946]
+	1. jupyter notebook password ## 修改密码
+	2. nohup jupyter-lab --port=9332 --no-browser 2>&1 & ## 启动服务
+	3. ssh -N -f -L 9332:localhost:9332 maiqh@192.168.0.222 ##本地端口映射
+	4. localhost:9332 ##连接
+
+
