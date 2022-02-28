@@ -21,5 +21,7 @@
 docker run -it -d --name futScript-maiqh -v /home/maiqh/maint:/home/maint python:3.7-buster
 
 docker 的 container 重启后 需要重启 ssh 服务，重启方法 
+    进入容器： 
+    docker exec -it ac50a54eeec2 bash
     /usr/sbin/sshd -D &
 如果端口映射在 run 的时候是设置为随机的，就需要再更改映射的端口

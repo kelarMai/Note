@@ -50,8 +50,23 @@ gdb a.out
 (gdb) show scheduler-locking		//查看当前锁定线程的模式
 (gdb) break filename.cpp:linenum thread all 	//所有线程在该位置打断点
 
-打开 core dump 文件方法
-gdb [exec file][core file]  如  gdb ./test [-c] test.core
-然后输入命令： bt
 
-gdb quote_receiver_xtp -c core.34800
+
+
+打开 core dump 文件方法
+
+gdb [exec file][core file]  如  gdb ./test [-c] test.core
+例：	
+	gdb quote_receiver_xtp -c core.34800
+
+命令：
+bt：backtrace :查看函数调用的顺序
+frame N： 切换到栈编号为 N 的上下文中。
+info frame:查看当前函数调用的帧栈信息
+info registers: 查看当前寄存器的值
+info args:查看当前函数参数的值
+info locals: 查看当前局部变量的值
+info variables:查看程序中的变量符号
+info functions:查看程序中的函数符号
+
+

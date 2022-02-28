@@ -1,0 +1,23 @@
+1. print 的格式，库的话，使用 logging 模块。
+2. 函数参数类型和返回值的类型在 2 中不能使用。
+3. 除法
+    / : 
+        python2: 
+            两个 int 相除，整除，结果为 int;
+            否则 float除法，结果为 float;
+        python3:
+            float 除法，结果为 float;
+    // 整除: 
+        python2 和 python3 相同，都是整除，但是，如果是两个 int 相除，结果为 int 类型，否则为 float 类型；
+
+4. dict 合并；
+    python2,3: a.update(b)
+    python3: a = {**a,**b}
+
+5. super()
+    python2:
+        super(A,self).func()
+    python3:
+        super().func()
+
+
