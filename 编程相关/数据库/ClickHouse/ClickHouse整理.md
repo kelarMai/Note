@@ -198,6 +198,9 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 --- 
 
 ## 有趣功能
+
+### 分片分区
+
 `partition` ：query中的分片命令\
 `replicated` : 配置文件中的副本配置\
 `shard` : ；配置文件中的分片配置；\
@@ -216,12 +219,37 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 理解两个命令的区别，首先得明白，即使是集群模式，集群中的每一个节点都是独立的；而不是单纯的备份。\
 前者可以把 query 操作直接执行在所有节点的实际数据库(如在所有节点中创建表 table_name )或者表中。\
 后者则需要先在所有节点分别中创建一个 hits_local 表，然后创建 hits_local 的映射表 hits_all，之后对 hits_all 的 query 操作都会在所有节点中执行。 hits_all 就像一个代理，分发并且保证所有的节点上相同的表执行相同的操作。\
-另外，不同节点上的相同表，都可以对自己做单独的操作而不同步到所有其他节点中。\
+另外，不同节点上的相同表，都可以对自己做单独的操作而不同步到所有其他节点中。
     
     INSERT INTO tutorial.hits_local [(c1, c2, c3)] VALUES (v11, v12, v13), (v21, v22, v23), ...
 
 这样就只在 hits_local 中插入数据。
 
+
+---
+
+# Table Engine
+
+## MergeTree
+
+1. 分批量数据写入，然后其后台把数据合并到规定的 block 中。
+2. ？
+
+### Primary Key; Partition Key, Order By
+
+1. Partition Key 是表的分区
+2. Primary Key 和其他数据库的不同，不需要唯一性。最好是创建 small sparse index ；
+3. Primary key 和 Order By 是类似的。两者一般是相同的，如果不相同时， Primary key 必须是 Order By 的前缀
+    
+       不可行
+       PRIMARY KEY(toYYYYMMDD(TickTime),Contract)
+       ORDER BY (toYYYYMMDD(TickTime),TickTime,Contract)
+
+       可行
+       PRIMARY KEY(toYYYYMMDD(TickTime),Contract)
+       ORDER BY (toYYYYMMDD(TickTime),Contract,TickTime)
+
+4. 
 
 ---
 
