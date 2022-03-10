@@ -238,7 +238,7 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 ### Primary Key; Partition Key, Order By
 
 1. Partition Key 是表的分区
-2. Primary Key 和其他数据库的不同，不需要唯一性。最好是创建 small sparse index ；
+2. Primary Key 和其他数据库的不同，不需要唯一性。最好是创建 small sparse index ；Primary Key 是用来做 Index 的，具有良好的稀疏性能更好提升查询速度。
 3. Primary key 和 Order By 是类似的。两者一般是相同的，如果不相同时， Primary key 必须是 Order By 的前缀
     
        不可行
@@ -249,7 +249,18 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
        PRIMARY KEY(toYYYYMMDD(TickTime),Contract)
        ORDER BY (toYYYYMMDD(TickTime),Contract,TickTime)
 
-4. 
+4. 多列的 Primary Key 对于查询性能影响不大，但会对插入/合并和内存消耗（存放 index ) 的影响比较大
+5. 对于 SummingMergeTree 和 AggregatingMergeTree ，因为需要某些列进行 GROUP BY / Aggregate，则常用来 GROUP BY 的列最好都放到  ORDER BY () 中。那么这时候，Primary Key 比 Order By 少是很有必要的。Primary Key 用来大范围地过滤数据，Order By 用来作为  dimension 提升 GROUP BY /Aggregate 的性能。
+6. 
+
+
+### 数据存储方法
+
+- Data parts 的拆分方法是：Partition
+- Data parts 中的数据保存方法：使用 Wide 模式，每列分别存储在不同的文件中；使用 Compact 模式，所有列数据存储在同一个文件中。对于少量高频存储的数据，使用后者更好。
+- Data parts 根据 `index_granularity/index_granularity_bytes` 对数据拆分成小单元；`index_granularity` 标记每个单元的行数量，`index_granularity_bytes` 标记每个单元的字节大小；每个单元存储 整数行 数据；然后每个单元贴上相应 Primary Key 的 mark。
+- 假如使用的是 Wide 模式，每个文件存储一列数据，则 index file 会记录每个 Data parts 的 mark，并且记录每个文件/每列数据中的 **单元** 的 mark。假如使用的是 Compact 模式，则一个文件中有 列数*单列拆分单元数 个单元。
+- 查询的时候，根据不同的 Primary Key 的 mark 定位相关数据的两侧位置，然后顺序/二分法查找到所需数据的位置。
 
 ---
 
@@ -286,12 +297,6 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 1. ORDER BY 和 Primary Key 具有同等的地位，一般两者相同，可以没有 Priamry Key ，但不能没有 ORDER BY .
 2. SAMPLE BY: 用来抽样的字段；其字段必须是正整性并且是 Primary key 
 
-## 数据存储方法
 
-- Data parts 的拆分方法是：Partition
-- Data parts 中的数据保存方法：使用 Wide 模式，每列分别存储在不同的文件中；使用 Compact 模式，所有列数据存储在同一个文件中。对于少量高频存储的数据，使用后者更好。
-- Data parts 根据 `index_granularity/index_granularity_bytes` 对数据拆分成小单元；`index_granularity` 标记每个单元的行数量，`index_granularity_bytes` 标记每个单元的字节大小；每个单元存储 整数行 数据；然后每个单元贴上相应 Primary Key 的 mark。
-- 假如使用的是 Wide 模式，每个文件存储一列数据，则 index file 会记录每个 Data parts 的 mark，并且记录每个文件/每列数据中的 **单元** 的 mark。假如使用的是 Compact 模式，则一个文件中有 列数*单列拆分单元数 个单元。
-- 查询的时候，根据不同的 Primary Key 的 mark 定位相关数据的两侧位置，然后顺序/二分法查找到所需数据的位置。
 
 
