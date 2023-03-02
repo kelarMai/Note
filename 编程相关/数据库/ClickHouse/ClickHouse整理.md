@@ -298,5 +298,49 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 2. SAMPLE BY: 用来抽样的字段；其字段必须是正整性并且是 Primary key 
 
 
+# 坑
 
+1. insert with 和 remote 同时使用的时候，因为 with 的执行机制，导致出错。
 
+       INSERT INTO test.fut_level1_tick_data
+       WITH
+           intDiv(TickTime,1000) AS SECOND_NUM,
+           intDiv(SECOND_NUM,3600) AS HOUR_,
+           intDiv(modulo(SECOND_NUM,3600),60) AS MINUTE_,
+           modulo(modulo(SECOND_NUM,3600),60) AS SECOND_,
+           modulo(TickTime,1000) AS MILLISECOND_,
+           HOUR*10000000+MINUTE_*100000+SECOND_*1000+MILLISECOND_ AS TIME_,
+           if(HOUR_ < 20 ,TIME_+240000000,TIME_) AS SORTTIME_
+        SELECT 
+            Symbol,TradingDate,SORTTIME_,TIME_,
+            Volume , 0 AS OI,LastPrice,Amount,HighPrice,LowPrice,
+            0 AS BP1,0 AS BV1,0 AS SP1,0 AS SV1,
+            0 AS ULP,0 AS LLP ,0 AS POI
+        FROM 
+        remote('114:9000',etl_mid_temp,gtja_sip_index_l1_snapshot,'user','password')
+        WHERE TradingDate = 20221216
+
+这样的就会导致只插入了部分的一两个合约的数据；而如果
+
+        INSERT INTO test.fut_level1_tick_data
+        SELECT * FROM
+        (
+        WITH
+           intDiv(TickTime,1000) AS SECOND_NUM,
+           intDiv(SECOND_NUM,3600) AS HOUR_,
+           intDiv(modulo(SECOND_NUM,3600),60) AS MINUTE_,
+           modulo(modulo(SECOND_NUM,3600),60) AS SECOND_,
+           modulo(TickTime,1000) AS MILLISECOND_,
+           HOUR*10000000+MINUTE_*100000+SECOND_*1000+MILLISECOND_ AS TIME_,
+           if(HOUR_ < 20 ,TIME_+240000000,TIME_) AS SORTTIME_
+        SELECT 
+            Symbol,TradingDate,SORTTIME_,TIME_,
+            Volume , 0 AS OI,LastPrice,Amount,HighPrice,LowPrice,
+            0 AS BP1,0 AS BV1,0 AS SP1,0 AS SV1,
+            0 AS ULP,0 AS LLP ,0 AS POI
+        FROM 
+        remote('114:9000',etl_mid_temp,gtja_sip_index_l1_snapshot,'user','password')
+        WHERE TradingDate = 20221216
+        )
+
+这样就没事，能正常插入所有数据。
