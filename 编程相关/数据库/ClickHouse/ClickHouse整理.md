@@ -119,7 +119,7 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
     + 原因：因为安装 clickhouse 时，创建了一个 clickhouse 的[用户和用户组](#new_user)，clickhouse 的很多相关文件都是属于该用户的；
     + 解决方法： 
         * 或者[修改文件权限](#modify_file_privilege)，修改文件的所属用户为该用户或者 root. 然后使用 `sudo clickhouse-server start` 命令来启动（不推荐）
-        * 使用 `sudo clickhouse start` 启动服务端，该命令会运行一个脚本文件，脚本命令应该为 `su -s /bin/sh 'clickhouse' -c '/usr/bin/clickhouse-server --config-file /etc/clickhouse-server/config.xml --pid-file /var/run/clickhouse-server/clickhouse-server.pid --daemon'`；即启动一个 clickhouse 的 shell 然后后台启动该服务。停止运行使用命令 `sudo clickhouse stop`
+        * 直接使用 root 用户安装；然后使用 `sudo clickhouse start` 启动服务端，该命令会运行一个脚本文件，脚本命令应该为 `su -s /bin/sh 'clickhouse' -c '/usr/bin/clickhouse-server --config-file /etc/clickhouse-server/config.xml --pid-file /var/run/clickhouse-server/clickhouse-server.pid --daemon'`；即启动一个 clickhouse 的 shell 然后后台启动该服务。停止运行使用命令 `sudo clickhouse stop`
 
 - 服务运行时，重启电脑，服务仍旧为启动状态，无需再启动，可以先尝试使用 `clickhouse-client` 连接。
 
