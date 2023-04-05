@@ -1,0 +1,2 @@
+升级 0.2.4 版本后发生的问题：
+    不能识别 DataFrame 的 extendType 类型数据，需要修改 numpy/helpers.py 文件，添加 pd.api.extensions.ExtensionArray 类型

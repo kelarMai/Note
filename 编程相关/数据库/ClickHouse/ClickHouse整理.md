@@ -198,6 +198,9 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 --- 
 
 ## 有趣功能
+
+### 分片分区
+
 `partition` ：query中的分片命令\
 `replicated` : 配置文件中的副本配置\
 `shard` : ；配置文件中的分片配置；\
@@ -216,12 +219,48 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 理解两个命令的区别，首先得明白，即使是集群模式，集群中的每一个节点都是独立的；而不是单纯的备份。\
 前者可以把 query 操作直接执行在所有节点的实际数据库(如在所有节点中创建表 table_name )或者表中。\
 后者则需要先在所有节点分别中创建一个 hits_local 表，然后创建 hits_local 的映射表 hits_all，之后对 hits_all 的 query 操作都会在所有节点中执行。 hits_all 就像一个代理，分发并且保证所有的节点上相同的表执行相同的操作。\
-另外，不同节点上的相同表，都可以对自己做单独的操作而不同步到所有其他节点中。\
+另外，不同节点上的相同表，都可以对自己做单独的操作而不同步到所有其他节点中。
     
     INSERT INTO tutorial.hits_local [(c1, c2, c3)] VALUES (v11, v12, v13), (v21, v22, v23), ...
 
 这样就只在 hits_local 中插入数据。
 
+
+---
+
+# Table Engine
+
+## MergeTree
+
+1. 分批量数据写入，然后其后台把数据合并到规定的 block 中。
+2. ？
+
+### Primary Key; Partition Key, Order By
+
+1. Partition Key 是表的分区
+2. Primary Key 和其他数据库的不同，不需要唯一性。最好是创建 small sparse index ；Primary Key 是用来做 Index 的，具有良好的稀疏性能更好提升查询速度。
+3. Primary key 和 Order By 是类似的。两者一般是相同的，如果不相同时， Primary key 必须是 Order By 的前缀
+    
+       不可行
+       PRIMARY KEY(toYYYYMMDD(TickTime),Contract)
+       ORDER BY (toYYYYMMDD(TickTime),TickTime,Contract)
+
+       可行
+       PRIMARY KEY(toYYYYMMDD(TickTime),Contract)
+       ORDER BY (toYYYYMMDD(TickTime),Contract,TickTime)
+
+4. 多列的 Primary Key 对于查询性能影响不大，但会对插入/合并和内存消耗（存放 index ) 的影响比较大
+5. 对于 SummingMergeTree 和 AggregatingMergeTree ，因为需要某些列进行 GROUP BY / Aggregate，则常用来 GROUP BY 的列最好都放到  ORDER BY () 中。那么这时候，Primary Key 比 Order By 少是很有必要的。Primary Key 用来大范围地过滤数据，Order By 用来作为  dimension 提升 GROUP BY /Aggregate 的性能。
+6. 
+
+
+### 数据存储方法
+
+- Data parts 的拆分方法是：Partition
+- Data parts 中的数据保存方法：使用 Wide 模式，每列分别存储在不同的文件中；使用 Compact 模式，所有列数据存储在同一个文件中。对于少量高频存储的数据，使用后者更好。
+- Data parts 根据 `index_granularity/index_granularity_bytes` 对数据拆分成小单元；`index_granularity` 标记每个单元的行数量，`index_granularity_bytes` 标记每个单元的字节大小；每个单元存储 整数行 数据；然后每个单元贴上相应 Primary Key 的 mark。
+- 假如使用的是 Wide 模式，每个文件存储一列数据，则 index file 会记录每个 Data parts 的 mark，并且记录每个文件/每列数据中的 **单元** 的 mark。假如使用的是 Compact 模式，则一个文件中有 列数*单列拆分单元数 个单元。
+- 查询的时候，根据不同的 Primary Key 的 mark 定位相关数据的两侧位置，然后顺序/二分法查找到所需数据的位置。
 
 ---
 
@@ -258,12 +297,50 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 1. ORDER BY 和 Primary Key 具有同等的地位，一般两者相同，可以没有 Priamry Key ，但不能没有 ORDER BY .
 2. SAMPLE BY: 用来抽样的字段；其字段必须是正整性并且是 Primary key 
 
-## 数据存储方法
 
-- Data parts 的拆分方法是：Partition
-- Data parts 中的数据保存方法：使用 Wide 模式，每列分别存储在不同的文件中；使用 Compact 模式，所有列数据存储在同一个文件中。对于少量高频存储的数据，使用后者更好。
-- Data parts 根据 `index_granularity/index_granularity_bytes` 对数据拆分成小单元；`index_granularity` 标记每个单元的行数量，`index_granularity_bytes` 标记每个单元的字节大小；每个单元存储 整数行 数据；然后每个单元贴上相应 Primary Key 的 mark。
-- 假如使用的是 Wide 模式，每个文件存储一列数据，则 index file 会记录每个 Data parts 的 mark，并且记录每个文件/每列数据中的 **单元** 的 mark。假如使用的是 Compact 模式，则一个文件中有 列数*单列拆分单元数 个单元。
-- 查询的时候，根据不同的 Primary Key 的 mark 定位相关数据的两侧位置，然后顺序/二分法查找到所需数据的位置。
+# 坑
 
+1. insert with 和 remote 同时使用的时候，因为 with 的执行机制，导致出错。
 
+       INSERT INTO test.fut_level1_tick_data
+       WITH
+           intDiv(TickTime,1000) AS SECOND_NUM,
+           intDiv(SECOND_NUM,3600) AS HOUR_,
+           intDiv(modulo(SECOND_NUM,3600),60) AS MINUTE_,
+           modulo(modulo(SECOND_NUM,3600),60) AS SECOND_,
+           modulo(TickTime,1000) AS MILLISECOND_,
+           HOUR*10000000+MINUTE_*100000+SECOND_*1000+MILLISECOND_ AS TIME_,
+           if(HOUR_ < 20 ,TIME_+240000000,TIME_) AS SORTTIME_
+        SELECT 
+            Symbol,TradingDate,SORTTIME_,TIME_,
+            Volume , 0 AS OI,LastPrice,Amount,HighPrice,LowPrice,
+            0 AS BP1,0 AS BV1,0 AS SP1,0 AS SV1,
+            0 AS ULP,0 AS LLP ,0 AS POI
+        FROM 
+        remote('114:9000',etl_mid_temp,gtja_sip_index_l1_snapshot,'user','password')
+        WHERE TradingDate = 20221216
+
+这样的就会导致只插入了部分的一两个合约的数据；而如果
+
+        INSERT INTO test.fut_level1_tick_data
+        SELECT * FROM
+        (
+        WITH
+           intDiv(TickTime,1000) AS SECOND_NUM,
+           intDiv(SECOND_NUM,3600) AS HOUR_,
+           intDiv(modulo(SECOND_NUM,3600),60) AS MINUTE_,
+           modulo(modulo(SECOND_NUM,3600),60) AS SECOND_,
+           modulo(TickTime,1000) AS MILLISECOND_,
+           HOUR*10000000+MINUTE_*100000+SECOND_*1000+MILLISECOND_ AS TIME_,
+           if(HOUR_ < 20 ,TIME_+240000000,TIME_) AS SORTTIME_
+        SELECT 
+            Symbol,TradingDate,SORTTIME_,TIME_,
+            Volume , 0 AS OI,LastPrice,Amount,HighPrice,LowPrice,
+            0 AS BP1,0 AS BV1,0 AS SP1,0 AS SV1,
+            0 AS ULP,0 AS LLP ,0 AS POI
+        FROM 
+        remote('114:9000',etl_mid_temp,gtja_sip_index_l1_snapshot,'user','password')
+        WHERE TradingDate = 20221216
+        )
+
+这样就没事，能正常插入所有数据。
