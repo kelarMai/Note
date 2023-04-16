@@ -48,21 +48,69 @@ $$
       1. mean-variance preference
       2. no limit on short selling
       3. common belif
-3. 效用函数： $u(r)=E(r)-A\sigma^2(r) A>0$，A是投资者的风险厌恶水平；
-4. (P33) CAPM 方程：
+3. 效用函数： 
 $$
-E(r_i)-r_f = \beta_i[E(r_M)-r_f]\\
-\beta_i=\frac{\sigma_im}{\sigma^2_M}\\
-i 为任意的投资点；m为最优组合即市场；
+u(r)=E(r)-A\sigma^2(r) A>0 ; A是投资者的风险厌恶水平；\\
+设: r_p=(1-w)m+wr_i\\
 $$
+通过效用函数也可以推导资产组合 m 具有最优的效用；
+
+1. (P33) CAPM (资本资产定价)方程（**证券市场线**）：
+$$
+E(r_i)-r_f = \beta_i[E(r_m)-r_f]\\
+\beta_i=\frac{\sigma_{im}}{\sigma^2_m}\\
+\sigma_{im} 为 i,m 的协方差\\
+i 为任意的投资点；m为最优组合即市场；\\
+r_f 为市场无风险利率
+$$
+该方程的含义：风险资产的价格和风险的对应关系；在一个完美市场下(假设条件)，资本可以在市场不同部门间自由流通，则市场最优组合 m 是整个市场中所有部门的资本有效配置的最优组合，使得所有资产处在同样的一套定价逻辑中，用同样的一套逻辑衡量了不同部门的风险和收益情况。资产处在一个均衡状态中。
+
+计算方法： 通过计算任意市场组合 i 和 m 的组合的**资本市场线**$l_{im}$的最优斜率（夏普）来得到；关键点在于$l_{im}$和**整体资本市场线**相切于m点；
+
+5. (P34)，在给定约束条件（市场范围）下，寻找可以达到最高 sharp 的组合。根据 CAPM 理论，所有资产的期望收益与$\beta$的关系是直线(线性关系) —— Securities Market Line (SML,**证券市场线**);
+6. 证券资产线衡量的是所有资产的期望和$\beta$的关系；资本市场线衡量的是 m 点的期望和标准差的关系；
 
 
+## 第七讲
+
+1. $E(r_i)-r_f$ 是风险溢价；$\beta_i$ 是对风险的度量；$E(r_m) - r_f$ 是风险的价格；$\sigma_i$可以分为两部分，与$\sigma_m$相关(可分散化)的风险和与$\sigma_m$不相关（不可分散化、各自的）的部分；市场只补偿与市场组合m相关的部分风险（系统风险）；
+2. 或者说，市场对于资产的定价，只定价系统风险；而资产自身的风险，不被定价；
+3. 当企业的风险能通过分散投资对冲来对冲时，不同分散投资组合的风险比较的，就是其承担的系统风险；分散化投资方案可以把个体企业的风险对冲，收益保留部分，从而提高夏普；而承担更高系统风险的企业，因其无法通过对冲解决风险，其夏普较低。所以，从金融的角度来说，资产定价不是看单个产品的期望方差，是看组合的期望和协方差；
+4. 估算 $\beta$
+$$
+\widetilde{r_i} \triangleq r_i - r_f ; \\
+\widetilde{r_m} \triangleq r_m - r_f ; \\
+\widetilde{r_i} 为组合 i 的超额收益；\\
+\Longrightarrow E(\widetilde{r_i}) = \beta_i E(\widetilde{r_m}) \\
+\widetilde{r_i} = \alpha_i + \beta_i\widetilde{r_m}+ \widetilde{\epsilon_i}\\
+通过概率函数的最小二乘法估算；
+$$
+通过超额收益来计算；
+
+5. 夏普指标应该用来评价充分分散化的基金；
+6. 评价资金比较集中的基金，使用 Jensen's Alpha 评价；到证券市场线的垂直距离；![如图](/金融相关/reference/jensen%20alpha.png)  
+主要衡量了投资在固定$\beta$下的超额收益；  
 
 
+## 第八讲
 
+C-CAPM : 通过各种假设，推出部分定理来补足 CAPM 的不足之处。
 
+Excepted utility  
+Decision Under Uncertainty  
+General (whole economy)  
 
+1. 期望效用函数的条件
+   1. 完备性
+   2. 可传递性
+   3. Continuous
+   4. Independence Axiom
 
+2. 其具有的形式：$U(L) = \displaystyle\sum_{i=1}^NP_nU(X_n)$
+3. 边际效用下降越快->效用函数越弯曲->为了消除风险愿意付出的风险溢价越多->越风险厌恶。
+![measurement of risk aversion](/金融相关/reference/measurement%20of%20risk%20aversion.png)
+   1. c为投入，假设边际效用 u(c) 为白色曲线，所以在 $c-\Delta 和 c+\Delta$ 的风险衡量下，愿意用 c 的投入换取实际为 $E_u(c\pm\Delta)$ 的基于风险的预期回报，而低于实际的边际效用回报 u(c); $E_u(c\pm\Delta)$ 所代表的回报水平实际上是 $ce_u$ 的投入回报，即该边际效用曲线的行为人愿意用 $c-ce_u$ 的风险溢价来消除风险；
+   2. 黄色的标记效用曲线情况一样，最后的情况是，其愿意使用 $c - ce_v$ 的风险溢价来消除风险。
 
 
 
