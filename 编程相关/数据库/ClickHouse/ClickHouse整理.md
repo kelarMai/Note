@@ -1,21 +1,25 @@
-# 目录
-- [简单入门](#简单入门)
-    + [使用场景](#使用场景)
-    + [部署方法](#部署方法)
-    + [参考文章](#参考文章)
-- [深入理解](#深入理解)
-    + []()
-- [拓展学习](#拓展学习)
-    + [数据库原理](#数据库原理)
+# clickhouse 
 
-# 颜色说明
+## 目录
+
+- [简单入门](#简单入门)
+- [使用场景](#使用场景)
+- [安装方法](#安装方法)
+- [部署方法](#部署方法)
+- [参考文章](#参考文章)
+- [深入理解](#深入理解)
+- [拓展学习](#拓展学习)
+  - [数据库原理](#数据库原理)
+
+## 颜色说明
+
 <font color="#dd0000">问题</font>  
 <font color="#FF1493">可能的尝试</font>  
 [链接]()
 
 ---
 
-# 简单入门
+## 简单入门
 
 ## 使用场景
 
@@ -25,7 +29,7 @@
 
 ---
 
-## 安装相关
+## 安装方法
 
 [参考网页](https://clickhouse.tech/docs/zh/getting-started/install/)
 
@@ -33,7 +37,7 @@
 
 [配置参考](https://clickhouse.tech/docs/en/operations/configuration-files/)  
 
-<span id="config_setting">默认配置文件`/etc/clickhouse-server/config.xml`  </span>
+<span id="config_setting"> 默认配置文件`/etc/clickhouse-server/config.xml` </span>
 
 重写的配置文件`.xml`一般可以放置在`/etc/clickhouse-server/config.d` 文件夹中，有修改或者需要重写的内容，最好都是在新文件中进行重写；xml 文件的根节点名称为 `<yandex>`；
 
@@ -69,13 +73,17 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
 ## 部署方法
 
 ---
+
 ### 核心
-分布式的多节点集群。  
+
+分布式的多节点集群。
 
 ---
 
 ### 集群布置方法
+
 [参考](https://clickhouse.tech/docs/en/getting-started/tutorial/)  
+
 1. 每个节点安装 clickhouse
 2. 修改配置文件 `config.xml` 中的集群属性(`<remote_servers>`)<font color="#FF1493">(理应可以在`/etc/clickhouse-server/config.d` 的配置文件中进行修改)；[相关问题](#config_setting)</font>
 3. 在每个节点中建立相应的表
@@ -89,28 +97,29 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
 
 
 ### 尝试
+
 [详细步骤](https://segmentfault.com/a/1190000038318776)
 
 1. 修改 /etc/hosts 中的 hostname，添加 ip 地址到 hostname 的映射
 2. （暂不设置 ip mac 地址，不关闭防火墙，）
 3. 永久关闭防火墙
-3. 设置公钥认证
-3. 时钟同步
-4. 安装 jdk
-5. 安装 zookeeper
+4. 设置公钥认证
+5. 时钟同步
+6. 安装 jdk
+7. 安装 zookeeper
     启动 zookeeper 时报错找不到 JAVA_HOME ，[解决方法](https://blog.csdn.net/HACKERRONGGE/article/details/102485260)
-6. 安装必要的依赖
-7. 在添加 <include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from> 时，这个新的 file 的内容一定要准确，特别是 host 的地址。
-    添加了 metrica.xml 后，可以添加 <clickhouse_remote_servers></clickhouse_remote_servers> 节点，然后在主 config.xml 文件的中修改 <remote_servers incl="clickhouse_remote_servers"></remote_servers> ；
-    可以不添加 <include_from>file_path</include_from> 而直接在 config.d 文件夹中新加一个 config.xml ，然后在该文件中添加 <remote_servers></remote_servers> 内容。
-    区分：如果是使用额外的文件，即在 config.xml 中添加 <include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from> 然后在 metrica.xml 中添加 <remote_servers></remote_servers> ；那么在 config.xml 文件中也必须要修改为 <remote_servers incl="remote_servers"></remote_servers>。而如果只是在 config.d 中添加新的 config.xml 文件，原来的 config.xml 文件就不需要做修改。
-    最好的方法还是添加 config.d/config.xml 文件
-8. 建表，使用 clickhouse 的远程功能即可。（注意防火墙是否关闭/如果不关闭防火墙，端口是否打开）
+8. 安装必要的依赖
+9. 在添加 `<include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from>` 时，这个新的 file 的内容一定要准确，特别是 host 的地址。
+   1. 添加了 metrica.xml 后，可以添加 `<clickhouse_remote_servers></clickhouse_remote_servers>` 节点，然后在主 config.xml 文件的中修改 `<remote_servers incl="clickhouse_remote_servers"></remote_servers>` ；
+   2. 可以不添加 `<include_from>file_path</include_from>` 而直接在 config.d 文件夹中新加一个 config.xml ，然后在该文件中添加 `<remote_servers></remote_servers>` 内容。
+   3. 区分：如果是使用额外的文件，即在 config.xml 中添加 `<include_from>file_path(如/etc/clickhouse-server/metrica.xml)</include_from>` 然后在 metrica.xml 中添加 `<remote_servers></remote_servers>` ；那么在 config.xml 文件中也必须要修改为 `<remote_servers incl="remote_servers"></remote_servers>`。而如果只是在 config.d 中添加新的 config.xml 文件，原来的 config.xml 文件就不需要做修改。
+   4. 最好的方法还是添加 config.d/config.xml 文件
+10. 建表，使用 clickhouse 的远程功能即可。（注意防火墙是否关闭/如果不关闭防火墙，端口是否打开）
 
 
 ---
 
-## 常见错误
+### 常见错误
 
 - 无法启动
     + 重现方法： 
@@ -128,7 +137,7 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
 
 ---
 
-## 参考文章
+### 参考文章
 
 [参考-入门简介](https://zhuanlan.zhihu.com/p/98135840)  
 
@@ -136,15 +145,16 @@ clickhouse user 的限制配置 `/etc/security/limits.d/clickhouse.conf`; 创建
 
 ---
 
-# 深入理解
+## 深入理解
 
-## 数据存储算法
+### 数据存储算法
 
 ClickHouse采用`类LSM Tree`的结构，[B+树到LSM树的说明-1](https://blog.csdn.net/dbanote/article/details/8897599)，[B+树到LSM树的说明-2](https://www.jianshu.com/p/f911cb9e42de)，[LSM树原理说明-1](https://www.zhihu.com/question/19887265)，[LSM树的提出论文](https://www.cs.umb.edu/~poneil/lsmtree.pdf),
 
 ---
 
-## 相关命令
+### 相关命令
+
 - `PARTITION BY`  
 > 解析：定义用来分区列；在配置中编辑文件中的`<remote_servers> <shard>` 即与之相关。
 
@@ -192,9 +202,6 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 会先获取 a 的单一值，从前往后就是 2 1 3，最后一个 2 是相同的，则不纳入。然后再根据 b 来排序。结果为\
 3 1 2
 
-- 
-
-
 --- 
 
 ## 有趣功能
@@ -225,17 +232,45 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 
 这样就只在 hits_local 中插入数据。
 
+### replicated 和 distributed 的异同
+
+1. [distirbuted table](https://clickhouse.com/docs/en/engines/table-engines/special/distributed#distributed-writing-data) 是按 shard 对数据进行拆分的；每个 shard 有自己的 weight ，决定该 shard 分配数据的权重，新建 distributed table 的时候(可以)设置 sharding_key ，clickhouse 会计算 sharding_key 和 weight ，决定该数据最终分配到哪一个 shard 中。
+2. sharding_key 可以是任意返回正整数的表达式；比如返回日期的数字格式、字符串的哈希(`intHash64(Contract)`)、rand()；
+3. 设置 cluster 配置时，可以给每个 shard 定义 replica ，用来定义该 shard 是否多个备份表；
+   1. 备份表可以是普通的 `MergeTree` 表，也可以是 `Replicated*MergeTree` 表；
+      1. 如果使用 `MergeTree` 引擎，需要在 shard 的配置中设置 `<internal_replication>False</internal_replication>`；插入数据时需要插入到 distributed 表，而不能是底表；如果有数据分配到该 shard ，分布式引擎会把数据同时分发到该 shard 的所有 replica 表中；
+      2. 如果使用 `Replicated*MergeTree` 引擎，需要在 shard 的配置中设置 `<internal_replication>True</internal_replication>`；如果插入数据到 distributed 表，有数据分配到该 shard 时，就会从 replica 中选一个进行插入，然后底层的 `Replicated*MergeTree` 引擎会自动把数据同步到不同的 replica 中；也可以直接插入数据到某一个 replica 的底表中，也会进行不同 replica 的数据同步；
+   2. 官方建议底层使用 `Replicated*MergeTree` 引擎配合 `<internal_replication>True</internal_replication>`
+4. replicated 和 distirbuted 是独立的两个内容，只不过 distributed 的底层表**可以是** replicated ，使用其功能来增添分布式表的备份属性；
+5. 在查询 distributed 表时，如果某个 shard 有多个 replicated ，需要给 session 设置 `prefer_localhost_replica=0` ，否则 `= 1` 会把所有 query 都发送到当前的 server ；这是把单条 query 发送到某个 replicated 上**完整执行**；即使是使用同一个 session 连续发送多条 query (比如使用 python 的进程池时) 也有效。还可以添加 [`load_balancing='random'`](https://clickhouse.com/docs/en/operations/settings/settings#settings-load_balancing) 来设置不同的效果。
+
+        SELECT something(*) FROM distributed_table
+        SETTINGS prefer_localhost_replica=0,load_balancing='random'
+
+6. 如果是 **单条复杂sql** 查询某个 **distributed 表**，其 shard 有多个 replicated 表的，可以使用 `max_parallel_replicas`,`prefer_localhost_replica=0` 搭配，直接从多个 replicated 表**异步**查询；需要注意的是，如果只是做简单查询，比如 `SELECT COUNT(*) FROM distributed_table` 需要添加 `optimize_trivial_count_query=0`
+<!-- 1. 需要表是 [`sample by`](https://github.com/ClickHouse/ClickHouse/pull/29279),[Parallel processing using SAMPLE key](https://clickhouse.com/docs/en/operations/settings/settings#parallel-processing-using-sample-key)；而如果有 [subquery](https://clickhouse.com/docs/en/sql-reference/operators/in#distributed-subqueries-and-max_parallel_replicas)，subquery 查的表的 `sample by` 需要和原表相同；
+2. 或者和参数 [`allow_experimental_parallel_reading_from_replicas=1`](https://clickhouse.com/blog/whats-new-in-clickhouse-22-1)搭配；[参考1](https://clickhouse.com/blog/clickhouse-release-23-03)，[参考2](https://clickhouse.com/docs/en/whats-new/changelog#experimental-feature-2) ； -->
+
+        SELECT complicated_sql(*) FROM distributed_table
+        SETTINGS max_parallel_replicas=2,prefer_localhost_replica=0
+
+        SELECT simple_sql(*) FROM distributed_table
+        SETTINGS max_parallel_replicas=2,prefer_localhost_replica=0
+        optimize_trivial_count_query=0
+
+7. 在升级了 ck 版本到 >[23.3.8](https://clickhouse.com/docs/en/whats-new/changelog#new-feature-4) 后 可以使用 `parallel_replicas_custom_key=xxHash32(Contract)` 和 `parallel_replicas_custom_key_filter_type='default'` 关键字；用来给**单个 shard 配置多个 replicated 的表**分割 replicated 表为多个虚拟的 shard ；注意这两个配置和 `prefer_localhost_replica` 的[配合使用](https://clickhouse.com/docs/en/operations/settings/settings#settings-prefer-localhost-replica)
+
 
 ---
 
-# Table Engine
+## Table Engine
 
-## MergeTree
+### MergeTree
 
 1. 分批量数据写入，然后其后台把数据合并到规定的 block 中。
 2. ？
 
-### Primary Key; Partition Key, Order By
+#### Primary Key; Partition Key, Order By
 
 1. Partition Key 是表的分区
 2. Primary Key 和其他数据库的不同，不需要唯一性。最好是创建 small sparse index ；Primary Key 是用来做 Index 的，具有良好的稀疏性能更好提升查询速度。
@@ -254,7 +289,7 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 6. 
 
 
-### 数据存储方法
+#### 数据存储方法
 
 - Data parts 的拆分方法是：Partition
 - Data parts 中的数据保存方法：使用 Wide 模式，每列分别存储在不同的文件中；使用 Compact 模式，所有列数据存储在同一个文件中。对于少量高频存储的数据，使用后者更好。
@@ -298,7 +333,7 @@ WITH ROLLUP/CUBE 是对 GROUP 的字段做部分的不 GROUP 处理，生成多�
 2. SAMPLE BY: 用来抽样的字段；其字段必须是正整性并且是 Primary key 
 
 
-# 坑
+## 坑
 
 1. insert with 和 remote 同时使用的时候，因为 with 的执行机制，导致出错。
 
